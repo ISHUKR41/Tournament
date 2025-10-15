@@ -103,8 +103,15 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
   };
 
   const onSubmit = (data: InsertTeam) => {
+    console.log("Form submitted with data:", data);
     registerMutation.mutate(data);
   };
+
+  // Log form errors for debugging
+  const formErrors = form.formState.errors;
+  if (Object.keys(formErrors).length > 0) {
+    console.log("Form validation errors:", formErrors);
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -428,28 +435,46 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
                 control={form.control}
                 name="agreedToTerms"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value === 1}
-                        onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
-                        data-testid="checkbox-terms"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        I agree to all terms and conditions
-                      </FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        I confirm that my team will follow fair gameplay and all tournament rules. 
-                        I understand that fees are non-refundable.
-                      </p>
-                      <FormMessage />
+                  <FormItem>
+                    <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value === 1}
+                          onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
+                          data-testid="checkbox-terms"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          I agree to all terms and conditions
+                        </FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          I confirm that my team will follow fair gameplay and all tournament rules. 
+                          I understand that fees are non-refundable.
+                        </p>
+                      </div>
                     </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            {/* Form Errors Display */}
+            {Object.keys(formErrors).length > 0 && (
+              <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4">
+                <p className="text-sm font-semibold text-destructive mb-2">
+                  Please fix the following errors:
+                </p>
+                <ul className="text-sm text-destructive space-y-1 list-disc list-inside">
+                  {Object.entries(formErrors).map(([key, error]: [string, any]) => (
+                    <li key={key}>
+                      <strong>{key}:</strong> {error?.message || "Invalid value"}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Submit */}
             <div className="flex gap-3 pt-4">

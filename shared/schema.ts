@@ -37,7 +37,9 @@ export const insertTeamSchema = createInsertSchema(teams).omit({
   player4PubgId: z.string().min(3, "Valid PUBG ID required"),
   transactionId: z.string().min(5, "Transaction ID required"),
   paymentScreenshot: z.string().min(1, "Payment screenshot required"),
-  agreedToTerms: z.literal(1, { errorMap: () => ({ message: "You must agree to terms and conditions" }) }),
+  agreedToTerms: z.number().refine((val) => val === 1, {
+    message: "You must agree to terms and conditions",
+  }),
 });
 
 export type InsertTeam = z.infer<typeof insertTeamSchema>;
