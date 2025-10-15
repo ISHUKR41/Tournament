@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Wallet
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const rules = [
   {
@@ -76,50 +77,89 @@ const rules = [
 ];
 
 export function TournamentRules() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
+  };
+
   return (
-    <section id="rules" className="py-16 md:py-24 container mx-auto px-4">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-display font-bold mb-4" data-testid="text-section-rules">
+    <section id="rules" className="py-20 md:py-28 container mx-auto px-4">
+      <motion.div 
+        className="text-center mb-16"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-4xl md:text-5xl font-display font-extrabold mb-5" data-testid="text-section-rules">
           Rules & Regulations
         </h2>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+        <p className="text-foreground/80 text-xl max-w-3xl mx-auto font-medium">
           Please read all rules carefully before registering. Organizers' decisions are final.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-6xl mx-auto">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+      >
         {rules.map((rule, index) => (
-          <Card 
+          <motion.div
             key={index}
-            className={`p-6 hover-elevate transition-all duration-300 ${
-              rule.variant === 'destructive' ? 'border-destructive/50' : ''
-            }`}
-            data-testid={`card-rule-${index}`}
+            variants={itemVariants}
           >
-            <div className="flex items-start gap-4">
-              <div className={`p-2 rounded-lg flex-shrink-0 ${
-                rule.variant === 'destructive' 
-                  ? 'bg-destructive/10' 
-                  : 'bg-primary/10'
-              }`}>
-                <rule.icon className={`w-5 h-5 ${
+            <Card 
+              className={`p-7 hover-elevate transition-all duration-300 hover:scale-[1.02] ${
+                rule.variant === 'destructive' ? 'border-destructive/40 hover:border-destructive/60' : 'hover:border-primary/30'
+              }`}
+              data-testid={`card-rule-${index}`}
+            >
+              <div className="flex items-start gap-5">
+                <div className={`p-3 rounded-xl flex-shrink-0 transition-transform duration-300 hover:scale-110 ${
                   rule.variant === 'destructive' 
-                    ? 'text-destructive' 
-                    : 'text-primary'
-                }`} />
+                    ? 'bg-destructive/15' 
+                    : 'bg-primary/15'
+                }`}>
+                  <rule.icon className={`w-6 h-6 ${
+                    rule.variant === 'destructive' 
+                      ? 'text-destructive' 
+                      : 'text-primary'
+                  }`} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display font-bold text-xl mb-2">
+                    {rule.title}
+                  </h3>
+                  <p className="text-base text-foreground/70 leading-relaxed">
+                    {rule.description}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-display font-semibold text-lg mb-2">
-                  {rule.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {rule.description}
-                </p>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

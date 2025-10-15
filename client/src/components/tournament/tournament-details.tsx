@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Gamepad2, Map, Smartphone, Users, IndianRupee, Trophy } from "lucide-react";
 import { TOURNAMENT_CONFIG } from "@shared/schema";
+import { motion } from "framer-motion";
 
 const details = [
   {
@@ -48,40 +49,79 @@ const details = [
 ];
 
 export function TournamentDetails() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
+  };
+
   return (
-    <section className="py-16 md:py-24 container mx-auto px-4">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-display font-bold mb-4" data-testid="text-section-tournament-details">
+    <section className="py-20 md:py-28 container mx-auto px-4">
+      <motion.div 
+        className="text-center mb-16"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-4xl md:text-5xl font-display font-extrabold mb-5" data-testid="text-section-tournament-details">
           Tournament Details
         </h2>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+        <p className="text-foreground/80 text-xl max-w-2xl mx-auto font-medium">
           Everything you need to know about the championship
         </p>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+      >
         {details.map((detail, index) => (
-          <Card 
-            key={index} 
-            className="p-6 hover-elevate transition-transform duration-300"
-            data-testid={`card-detail-${detail.label.toLowerCase().replace(/\s+/g, '-')}`}
+          <motion.div
+            key={index}
+            variants={itemVariants}
           >
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-lg ${detail.bg} flex-shrink-0`}>
-                <detail.icon className={`w-6 h-6 ${detail.color}`} />
+            <Card 
+              className="p-7 hover-elevate transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              data-testid={`card-detail-${detail.label.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              <div className="flex items-start gap-5">
+                <div className={`p-4 rounded-xl ${detail.bg} flex-shrink-0 transition-transform duration-300 hover:scale-110`}>
+                  <detail.icon className={`w-7 h-7 ${detail.color}`} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">
+                    {detail.label}
+                  </h3>
+                  <p className="font-display font-bold text-xl">
+                    {detail.value}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-sm text-muted-foreground mb-1">
-                  {detail.label}
-                </h3>
-                <p className="font-display font-bold text-lg">
-                  {detail.value}
-                </p>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

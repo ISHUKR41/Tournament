@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { X, Upload, Loader2 } from "lucide-react";
+import { X, Upload, Loader2, QrCode, Smartphone, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,6 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { insertTeamSchema, type InsertTeam } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import paymentQr from "@assets/pubg qr_1760564389416.jpg";
 
 interface RegistrationFormProps {
   onClose: () => void;
@@ -26,6 +27,9 @@ interface RegistrationFormProps {
 export function RegistrationForm({ onClose }: RegistrationFormProps) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  
+  const upiId = "your-upi-id@paytm";
 
   const form = useForm<InsertTeam>({
     resolver: zodResolver(insertTeamSchema),
@@ -77,6 +81,24 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
         form.setValue("paymentScreenshot", base64);
       };
       reader.readAsDataURL(file);
+    }
+  };
+  
+  const copyUpiId = async () => {
+    try {
+      await navigator.clipboard.writeText(upiId);
+      setCopied(true);
+      toast({
+        title: "UPI ID Copied!",
+        description: "You can now paste it in your payment app",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please copy the UPI ID manually",
+        variant: "destructive",
+      });
     }
   };
 
@@ -271,6 +293,77 @@ export function RegistrationForm({ onClose }: RegistrationFormProps) {
                   )}
                 />
               </div>
+            </div>
+
+            {/* Payment QR Code */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-display font-semibold flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-primary" />
+                Payment Details - ₹80
+              </h3>
+              
+              <Card className="p-6 bg-gradient-to-br from-primary/5 to-chart-1/5 border-primary/20">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="bg-white p-4 rounded-xl shadow-lg">
+                      <img 
+                        src={paymentQr} 
+                        alt="Payment QR Code" 
+                        className="w-48 h-48 object-contain"
+                        data-testid="img-payment-qr"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3 text-center">
+                      Scan this QR code with any UPI app
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-col justify-center space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-muted-foreground mb-2">Payment Methods:</p>
+                      <div className="flex flex-wrap gap-2">
+                        <div className="flex items-center gap-2 bg-background/60 px-3 py-1.5 rounded-lg">
+                          <Smartphone className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium">Google Pay</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-background/60 px-3 py-1.5 rounded-lg">
+                          <Smartphone className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium">PhonePe</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-background/60 px-3 py-1.5 rounded-lg">
+                          <Smartphone className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium">Paytm</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-muted-foreground">UPI ID:</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 bg-background/60 px-3 py-2 rounded-lg text-sm font-mono">
+                          {upiId}
+                        </code>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          onClick={copyUpiId}
+                          data-testid="button-copy-upi"
+                        >
+                          {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                      <p className="text-xs text-destructive font-semibold">Important:</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Pay exactly ₹80. After payment, enter transaction ID and upload screenshot below.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
 
             {/* Payment Details */}
