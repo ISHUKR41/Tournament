@@ -1,0 +1,164 @@
+🎮 PUBG Mobile Tournament Registration Form
+
+Welcome to the Ultimate PUBG Mobile Squad Tournament! 🏆
+Show off your skills, teamwork, and strategy to win exciting cash prizes!
+Please read all instructions carefully before registering your team.
+
+📅 Tournament Details
+
+Organizer: [Your Name or Organization Name]
+
+Game: PUBG Mobile (Squad Match)
+
+Mode: Squad (4 Players per Team)
+
+Map: Erangel (Classic)
+
+Platform: Mobile Only (No Emulator Players Allowed)
+
+Entry Fee: ₹80 per team
+
+Winning Prize: ₹1000
+
+Runner-up Prize: ₹400
+
+Total Slots Available: 25 Teams (First come, first serve)
+
+💰 Payment Details
+
+Entry Fee: ₹80 per team
+
+Payment Method: [Enter your UPI ID or paste your payment QR code link/image here]
+
+Each team must complete payment before submitting this form.
+
+Upload payment screenshot and enter your transaction/reference ID to confirm registration.
+
+⚠️ Important: Once payment is made, no refund will be issued under any circumstances — even if your team does not join or gets disqualified.
+
+📜 Rules & Regulations
+
+Please make sure you read and follow all the rules strictly 👇
+
+Each team must have exactly 4 members.
+
+Only mobile players are allowed. Emulator players are not permitted.
+
+No hacks, cheats, glitches, or third-party tools — any violation will lead to immediate disqualification.
+
+Team names and PUBG IDs must be correct and final — no changes after submission.
+
+Once registered, fees are non-refundable.
+
+Room ID and Password will be shared 15 minutes before the match on the team leader’s WhatsApp number.
+
+Teams must join on time — late entries will not be entertained.
+
+Good behavior and fair play are mandatory. Use of abusive language or toxic behavior will lead to disqualification.
+
+Organizers’ decisions are final and must be respected by all participants.
+
+Recording or streaming is allowed, but please mention the official tournament name if shared publicly.
+
+If a player is disconnected during a match, no rematch or refund will be given.
+
+Top 2 teams will receive their prize money directly via UPI/Paytm/PhonePe after verification.
+
+📝 Form Sections
+Section 1: Team Information
+
+Team Name
+
+Team Leader Full Name
+
+Team Leader WhatsApp Number (Active number for updates)
+
+Team Leader PUBG ID
+
+Section 2: Player Information
+
+Player 2 Name
+
+Player 2 PUBG ID
+
+Player 3 Name
+
+Player 3 PUBG ID
+
+Player 4 Name
+
+Player 4 PUBG ID
+
+Section 3: Payment Confirmation
+
+Upload Payment Screenshot (Mandatory)
+
+Enter Transaction ID or Reference Number
+
+Payment Sent To (Organizer’s UPI ID or Name)
+
+Section 4: Agreement & Declaration
+
+Please read carefully 👇
+Do you agree to all the rules and confirm that your team will follow fair gameplay?
+
+Yes, I agree and accept all terms and conditions.
+(Make this a required multiple-choice question.)
+
+⚙️ Automatic Form Closing After 25 Teams
+
+Unfortunately, Google Forms doesn’t automatically close after 25 submissions by default, but you can set it up easily like this:
+
+Option 1 (Manual – Easy Method):
+
+Once 25 teams have registered and paid, simply:
+
+Go to Google Form → Responses tab
+
+Toggle off “Accepting responses”
+This will close the form instantly and show your custom message like:
+
+“Registration is now closed! All 25 team slots have been filled. Thank you for your interest!”
+
+Option 2 (Automatic – Smart Method using Add-on):
+
+You can use a free Google Forms Add-on called “FormLimiter” that automatically closes your form after 25 submissions.
+Here’s how:
+
+Open your Google Form.
+
+Click on the three dots (⋮) → choose Add-ons.
+
+Search for “FormLimiter” and install it.
+
+After installing, click the puzzle icon (Add-ons) → FormLimiter → Set limit.
+
+Choose “Limit by number of responses.”
+
+Set Limit = 25.
+
+Add a custom closing message like:
+
+“All 25 slots are filled. Registration is now closed. Stay tuned for the next tournament!”
+
+After that, your form will automatically stop accepting responses once 25 teams have successfully registered.
+
+📞 Contact for Queries
+
+For any questions or payment confirmation, contact the tournament organizer on WhatsApp:
+📱 [Your WhatsApp Number]
+
+⚠️ Important Notes
+
+Once registration is confirmed, your team will be added to the official WhatsApp group for match updates.
+
+No refund after registration — please join on time.
+
+Match schedule, timing, and rules will be shared in the WhatsApp group.
+
+If any team fails to join the match lobby on time, their slot will be given to a standby team (if available).
+
+🏁 Good Luck, Warriors!
+
+Sharpen your aim, plan your drops, and lead your squad to victory.
+Let’s see who becomes the PUBG Mobile Champion! 🔥
