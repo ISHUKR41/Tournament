@@ -1,6 +1,14 @@
-import { pgTable, text, varchar, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Admin Users Schema
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
 
 // Tournament Team Registration Schema
 export const teams = pgTable("teams", {
@@ -18,12 +26,14 @@ export const teams = pgTable("teams", {
   transactionId: text("transaction_id").notNull(),
   paymentScreenshot: text("payment_screenshot").notNull(),
   agreedToTerms: integer("agreed_to_terms").notNull().default(1),
+  status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertTeamSchema = createInsertSchema(teams).omit({
   id: true,
   createdAt: true,
+  status: true,
 }).extend({
   teamName: z.string().min(3, "Team name must be at least 3 characters").max(50, "Team name too long"),
   leaderName: z.string().min(2, "Leader name required"),
@@ -44,6 +54,14 @@ export const insertTeamSchema = createInsertSchema(teams).omit({
 
 export type InsertTeam = z.infer<typeof insertTeamSchema>;
 export type Team = typeof teams.$inferSelect;
+
+export const insertAdminSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAdmin = z.infer<typeof insertAdminSchema>;
+export type Admin = typeof adminUsers.$inferSelect;
 
 // Tournament Configuration
 export const TOURNAMENT_CONFIG = {

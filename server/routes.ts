@@ -1,10 +1,64 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTeamSchema } from "@shared/schema";
+import bcrypt from "bcryptjs";
+import ExcelJS from "exceljs";
+
+declare module 'express-session' {
+  interface SessionData {
+    adminId?: number;
+    username?: string;
+  }
+}
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.adminId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all registered teams
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      const admin = await storage.getAdminByUsername(username);
+      if (!admin) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const isValid = await bcrypt.compare(password, admin.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      req.session.adminId = admin.id;
+      req.session.username = admin.username;
+      
+      res.json({ message: "Login successful", username: admin.username });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/admin/logout", (req, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logout successful" });
+    });
+  });
+
+  app.get("/api/admin/me", (req, res) => {
+    if (!req.session.adminId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json({ username: req.session.username });
+  });
+
   app.get("/api/teams", async (_req, res) => {
     try {
       const teams = await storage.getAllTeams();
@@ -14,7 +68,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get team count
   app.get("/api/teams/count", async (_req, res) => {
     try {
       const count = await storage.getTeamCount();
@@ -24,7 +77,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Register a new team
   app.post("/api/teams", async (req, res) => {
     try {
       const validatedData = insertTeamSchema.parse(req.body);
@@ -42,7 +94,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a specific team by ID
   app.get("/api/teams/:id", async (req, res) => {
     try {
       const team = await storage.getTeam(req.params.id);
@@ -51,6 +102,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       res.json(team);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.patch("/api/admin/teams/:id/status", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      const team = await storage.updateTeamStatus(req.params.id, status);
+      res.json(team);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/teams/export", requireAuth, async (_req, res) => {
+    try {
+      const teams = await storage.getAllTeams();
+      
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Teams');
+      
+      worksheet.columns = [
+        { header: 'Team Name', key: 'teamName', width: 20 },
+        { header: 'Leader Name', key: 'leaderName', width: 20 },
+        { header: 'Leader WhatsApp', key: 'leaderWhatsapp', width: 15 },
+        { header: 'Leader PUBG ID', key: 'leaderPubgId', width: 20 },
+        { header: 'Player 2 Name', key: 'player2Name', width: 20 },
+        { header: 'Player 2 PUBG ID', key: 'player2PubgId', width: 20 },
+        { header: 'Player 3 Name', key: 'player3Name', width: 20 },
+        { header: 'Player 3 PUBG ID', key: 'player3PubgId', width: 20 },
+        { header: 'Player 4 Name', key: 'player4Name', width: 20 },
+        { header: 'Player 4 PUBG ID', key: 'player4PubgId', width: 20 },
+        { header: 'Transaction ID', key: 'transactionId', width: 25 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Registration Date', key: 'createdAt', width: 20 },
+      ];
+
+      teams.forEach(team => {
+        worksheet.addRow({
+          ...team,
+          createdAt: new Date(team.createdAt).toLocaleString(),
+        });
+      });
+
+      worksheet.getRow(1).font = { bold: true };
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=teams-${new Date().toISOString().split('T')[0]}.xlsx`
+      );
+
+      await workbook.xlsx.write(res);
+      res.end();
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
