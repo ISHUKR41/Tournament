@@ -29,7 +29,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
 
-  const { data: admin, isLoading: adminLoading } = useQuery({
+  const { data: admin, isLoading: adminLoading } = useQuery<{ username: string }>({
     queryKey: ['/api/admin/me'],
     retry: false,
   });

@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { MessageCircle, Mail, Trophy } from "lucide-react";
+import { MessageCircle, Mail, Trophy, Shield } from "lucide-react";
+import { Link } from "wouter";
 
 export function Footer() {
   return (
@@ -55,6 +56,12 @@ export function Footer() {
         <div className="border-t pt-6 text-center text-sm text-muted-foreground">
           <p>© 2025 PUBG Mobile Tournament. All rights reserved.</p>
           <p className="mt-1">Good luck, warriors! May the best squad win.</p>
+          <Link href="/admin/login">
+            <button className="mt-4 text-xs opacity-30 hover:opacity-100 transition-opacity flex items-center gap-1 mx-auto" data-testid="link-admin">
+              <Shield className="w-3 h-3" />
+              Admin
+            </button>
+          </Link>
         </div>
       </div>
     </footer>
