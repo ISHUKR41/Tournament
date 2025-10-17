@@ -6,6 +6,7 @@ import { TOURNAMENT_CONFIG } from "@shared/schema";
 export function SlotCounter() {
   const { data: teams = [] } = useQuery<any[]>({
     queryKey: ['/api/teams'],
+    refetchInterval: 5000,
   });
 
   const slotsRemaining = TOURNAMENT_CONFIG.MAX_TEAMS - teams.length;

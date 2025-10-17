@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 export function RegisteredTeams() {
   const { data: teams = [], isLoading } = useQuery<Team[]>({
     queryKey: ['/api/teams'],
+    refetchInterval: 5000,
   });
 
   const containerVariants = {
