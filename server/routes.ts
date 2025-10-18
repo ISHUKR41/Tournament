@@ -1,9 +1,11 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTeamSchema } from "@shared/schema";
+import { insertTeamSchema, TOURNAMENT_CONFIG } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import ExcelJS from "exceljs";
+import path from "path";
+import fs from "fs";
 
 declare module 'express-session' {
   interface SessionData {
@@ -107,11 +109,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/teams/search", async (req, res) => {
+    try {
+      const { query, status } = req.query;
+      
+      if (!query && !status) {
+        const teams = await storage.getAllTeams();
+        res.json(teams);
+        return;
+      }
+      
+      const teams = await storage.searchTeams(
+        (query as string) || "",
+        status as string | undefined
+      );
+      res.json(teams);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/admin/stats", requireAuth, async (_req, res) => {
+    try {
+      const totalTeams = await storage.getTeamCount();
+      const pendingTeams = await storage.getTeamCountByStatus("pending");
+      const approvedTeams = await storage.getTeamCountByStatus("approved");
+      const rejectedTeams = await storage.getTeamCountByStatus("rejected");
+      
+      res.json({
+        total: totalTeams,
+        pending: pendingTeams,
+        approved: approvedTeams,
+        rejected: rejectedTeams,
+        available: TOURNAMENT_CONFIG.MAX_TEAMS - totalTeams,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.patch("/api/admin/teams/:id/status", requireAuth, async (req, res) => {
     try {
       const { status } = req.body;
+      const validStatuses = ["pending", "approved", "rejected"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
       const team = await storage.updateTeamStatus(req.params.id, status);
       res.json(team);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.patch("/api/admin/teams/:id/notes", requireAuth, async (req, res) => {
+    try {
+      const { notes } = req.body;
+      const team = await storage.updateTeamNotes(req.params.id, notes);
+      res.json(team);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/admin/teams/bulk-status", requireAuth, async (req, res) => {
+    try {
+      const { ids, status } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Invalid team IDs" });
+      }
+      const validStatuses = ["pending", "approved", "rejected"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      const teams = await storage.bulkUpdateStatus(ids, status);
+      res.json(teams);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
@@ -136,7 +208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { header: 'Player 4 Name', key: 'player4Name', width: 20 },
         { header: 'Player 4 PUBG ID', key: 'player4PubgId', width: 20 },
         { header: 'Transaction ID', key: 'transactionId', width: 25 },
+        { header: 'Payment Screenshot', key: 'paymentScreenshot', width: 50 },
         { header: 'Status', key: 'status', width: 15 },
+        { header: 'Admin Notes', key: 'adminNotes', width: 30 },
         { header: 'Registration Date', key: 'createdAt', width: 20 },
       ];
 
@@ -144,10 +218,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         worksheet.addRow({
           ...team,
           createdAt: new Date(team.createdAt).toLocaleString(),
+          adminNotes: team.adminNotes || '',
         });
       });
 
       worksheet.getRow(1).font = { bold: true };
+
+      const exportsDir = path.join(process.cwd(), 'exports');
+      if (!fs.existsSync(exportsDir)) {
+        fs.mkdirSync(exportsDir, { recursive: true });
+      }
+
+      const filename = `teams-${new Date().toISOString().split('T')[0]}-${Date.now()}.xlsx`;
+      const filepath = path.join(exportsDir, filename);
+
+      await workbook.xlsx.writeFile(filepath);
 
       res.setHeader(
         'Content-Type',
@@ -155,11 +240,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=teams-${new Date().toISOString().split('T')[0]}.xlsx`
+        `attachment; filename=${filename}`
       );
 
-      await workbook.xlsx.write(res);
-      res.end();
+      const fileBuffer = await workbook.xlsx.writeBuffer();
+      res.send(fileBuffer);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }

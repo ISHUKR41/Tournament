@@ -27,13 +27,17 @@ export const teams = pgTable("teams", {
   paymentScreenshot: text("payment_screenshot").notNull(),
   agreedToTerms: integer("agreed_to_terms").notNull().default(1),
   status: text("status").notNull().default("pending"),
+  adminNotes: text("admin_notes"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertTeamSchema = createInsertSchema(teams).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
   status: true,
+  adminNotes: true,
 }).extend({
   teamName: z.string().min(3, "Team name must be at least 3 characters").max(50, "Team name too long"),
   leaderName: z.string().min(2, "Leader name required"),
