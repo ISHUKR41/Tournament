@@ -4,6 +4,16 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
@@ -14,7 +24,9 @@ import {
   XCircle, 
   Clock,
   Eye,
-  Loader2 
+  Loader2,
+  Search,
+  Filter
 } from "lucide-react";
 import type { Team } from "@shared/schema";
 import {
@@ -24,10 +36,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+interface AdminStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  available: number;
+}
+
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
+  const [adminNotes, setAdminNotes] = useState("");
 
   const { data: admin, isLoading: adminLoading } = useQuery<{ username: string }>({
     queryKey: ['/api/admin/me'],
@@ -40,9 +64,35 @@ export default function AdminDashboard() {
     }
   }, [admin, adminLoading, setLocation]);
 
-  const { data: teams = [], isLoading } = useQuery<Team[]>({
-    queryKey: ['/api/teams'],
+  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
+    queryKey: ['/api/admin/stats'],
+    refetchInterval: 5000,
+    enabled: !!admin,
   });
+
+  const buildSearchUrl = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('query', searchQuery);
+    if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+    return `/api/teams/search?${params.toString()}`;
+  };
+
+  const { data: teams = [], isLoading: teamsLoading } = useQuery<Team[]>({
+    queryKey: ['/api/teams/search', searchQuery, statusFilter],
+    queryFn: async () => {
+      const url = buildSearchUrl();
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch teams');
+      return response.json();
+    },
+    enabled: !!admin,
+  });
+
+  useEffect(() => {
+    if (selectedTeam) {
+      setAdminNotes(selectedTeam.adminNotes || "");
+    }
+  }, [selectedTeam]);
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -62,7 +112,8 @@ export default function AdminDashboard() {
       return await apiRequest("PATCH", `/api/admin/teams/${id}/status`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teams/search'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       toast({
         title: "Status Updated",
         description: "Team status has been updated successfully",
@@ -73,6 +124,48 @@ export default function AdminDashboard() {
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateNotesMutation = useMutation({
+    mutationFn: async ({ id, notes }: { id: string; notes: string }) => {
+      return await apiRequest("PATCH", `/api/admin/teams/${id}/notes`, { notes });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/teams/search'] });
+      toast({
+        title: "Notes Saved",
+        description: "Admin notes have been saved successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save notes",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkStatusMutation = useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) => {
+      return await apiRequest("POST", "/api/admin/teams/bulk-status", { ids, status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/teams/search'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      setSelectedTeamIds([]);
+      toast({
+        title: "Bulk Update Successful",
+        description: "Selected teams have been updated",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Bulk Update Failed",
+        description: error.message || "Failed to update teams",
         variant: "destructive",
       });
     },
@@ -114,6 +207,52 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTeamIds(teams.map(t => t.id));
+    } else {
+      setSelectedTeamIds([]);
+    }
+  };
+
+  const handleSelectTeam = (teamId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTeamIds([...selectedTeamIds, teamId]);
+    } else {
+      setSelectedTeamIds(selectedTeamIds.filter(id => id !== teamId));
+    }
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedTeamIds.length === 0) {
+      toast({
+        title: "No Selection",
+        description: "Please select teams to approve",
+        variant: "destructive",
+      });
+      return;
+    }
+    bulkStatusMutation.mutate({ ids: selectedTeamIds, status: "approved" });
+  };
+
+  const handleBulkReject = () => {
+    if (selectedTeamIds.length === 0) {
+      toast({
+        title: "No Selection",
+        description: "Please select teams to reject",
+        variant: "destructive",
+      });
+      return;
+    }
+    bulkStatusMutation.mutate({ ids: selectedTeamIds, status: "rejected" });
+  };
+
+  const handleSaveNotes = () => {
+    if (selectedTeam) {
+      updateNotesMutation.mutate({ id: selectedTeam.id, notes: adminNotes });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "approved":
@@ -135,10 +274,6 @@ export default function AdminDashboard() {
         return <Clock className="w-4 h-4" />;
     }
   };
-
-  const pendingCount = teams.filter(t => t.status === "pending").length;
-  const approvedCount = teams.filter(t => t.status === "approved").length;
-  const rejectedCount = teams.filter(t => t.status === "rejected").length;
 
   if (adminLoading) {
     return (
@@ -179,97 +314,188 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Teams</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="text-total-teams">{teams.length}</div>
+              {statsLoading ? (
+                <div className="h-8 bg-secondary/50 rounded animate-pulse"></div>
+              ) : (
+                <div className="text-2xl font-bold" data-testid="text-total-teams">{stats?.total || 0}</div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending</CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="text-pending-teams">{pendingCount}</div>
+              {statsLoading ? (
+                <div className="h-8 bg-secondary/50 rounded animate-pulse"></div>
+              ) : (
+                <div className="text-2xl font-bold" data-testid="text-pending-teams">{stats?.pending || 0}</div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Approved</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="text-approved-teams">{approvedCount}</div>
+              {statsLoading ? (
+                <div className="h-8 bg-secondary/50 rounded animate-pulse"></div>
+              ) : (
+                <div className="text-2xl font-bold" data-testid="text-approved-teams">{stats?.approved || 0}</div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Rejected</CardTitle>
               <XCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold" data-testid="text-rejected-teams">{rejectedCount}</div>
+              {statsLoading ? (
+                <div className="h-8 bg-secondary/50 rounded animate-pulse"></div>
+              ) : (
+                <div className="text-2xl font-bold" data-testid="text-rejected-teams">{stats?.rejected || 0}</div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Registered Teams</CardTitle>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <CardTitle>Registered Teams</CardTitle>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <div className="relative flex-1 md:w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search teams..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-search"
+                  />
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-40" data-testid="select-status-filter">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" data-testid="filter-all">All Status</SelectItem>
+                    <SelectItem value="pending" data-testid="filter-pending">Pending</SelectItem>
+                    <SelectItem value="approved" data-testid="filter-approved">Approved</SelectItem>
+                    <SelectItem value="rejected" data-testid="filter-rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {selectedTeamIds.length > 0 && (
+              <div className="mb-4 p-4 bg-secondary/50 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <span className="text-sm font-medium">
+                  {selectedTeamIds.length} team{selectedTeamIds.length !== 1 ? 's' : ''} selected
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleBulkApprove}
+                    disabled={bulkStatusMutation.isPending}
+                    data-testid="button-bulk-approve"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve Selected
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={handleBulkReject}
+                    disabled={bulkStatusMutation.isPending}
+                    data-testid="button-bulk-reject"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject Selected
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {teamsLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : teams.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No teams registered yet</p>
+              <p className="text-center text-muted-foreground py-8">
+                {searchQuery || statusFilter !== 'all' ? 'No teams found matching your filters' : 'No teams registered yet'}
+              </p>
             ) : (
-              <div className="space-y-4">
-                {teams.map((team) => (
-                  <Card key={team.id} className="hover-elevate">
-                    <CardContent className="p-4">
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg" data-testid={`text-team-name-${team.id}`}>
-                              {team.teamName}
-                            </h3>
-                            <Badge className={getStatusColor(team.status)}>
-                              <span className="flex items-center gap-1">
-                                {getStatusIcon(team.status)}
-                                {team.status}
-                              </span>
-                            </Badge>
+              <>
+                <div className="mb-4 flex items-center gap-3">
+                  <Checkbox
+                    checked={selectedTeamIds.length === teams.length && teams.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    data-testid="checkbox-select-all"
+                  />
+                  <span className="text-sm font-medium">Select All</span>
+                </div>
+                <div className="space-y-4">
+                  {teams.map((team) => (
+                    <Card key={team.id} className="hover-elevate">
+                      <CardContent className="p-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                          <div className="flex items-start gap-3 flex-1">
+                            <Checkbox
+                              checked={selectedTeamIds.includes(team.id)}
+                              onCheckedChange={(checked) => handleSelectTeam(team.id, checked as boolean)}
+                              className="mt-1"
+                              data-testid={`checkbox-team-${team.id}`}
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold text-lg" data-testid={`text-team-name-${team.id}`}>
+                                  {team.teamName}
+                                </h3>
+                                <Badge className={getStatusColor(team.status)}>
+                                  <span className="flex items-center gap-1">
+                                    {getStatusIcon(team.status)}
+                                    {team.status}
+                                  </span>
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground space-y-1">
+                                <p>Leader: {team.leaderName} • {team.leaderWhatsapp}</p>
+                                <p>Transaction ID: {team.transactionId}</p>
+                                <p>Registered: {new Date(team.createdAt).toLocaleString()}</p>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            <p>Leader: {team.leaderName} • {team.leaderWhatsapp}</p>
-                            <p>Transaction ID: {team.transactionId}</p>
-                            <p>Registered: {new Date(team.createdAt).toLocaleString()}</p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedTeam(team)}
+                              data-testid={`button-view-${team.id}`}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedTeam(team)}
-                            data-testid={`button-view-${team.id}`}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -330,6 +556,33 @@ export default function AdminDashboard() {
                       className="max-w-full h-auto rounded-lg border"
                     />
                   )}
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-2">Admin Notes</h4>
+                  <Textarea
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    placeholder="Add notes about this team..."
+                    className="min-h-24"
+                    data-testid="textarea-admin-notes"
+                  />
+                  <Button
+                    onClick={handleSaveNotes}
+                    disabled={updateNotesMutation.isPending}
+                    className="mt-2"
+                    size="sm"
+                    data-testid="button-save-notes"
+                  >
+                    {updateNotesMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Notes'
+                    )}
+                  </Button>
                 </div>
 
                 <div className="flex gap-2 pt-4">
