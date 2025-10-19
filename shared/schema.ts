@@ -87,10 +87,10 @@ export const TOURNAMENT_CONFIG = {
     TOURNAMENT_DATE: "2025-10-25T18:00:00",
   },
   FREE_FIRE: {
-    MAX_TEAMS: 25,
+    MAX_TEAMS: 12,
     ENTRY_FEE: 80,
-    PRIZE_WINNER: 1000,
-    PRIZE_RUNNER_UP: 400,
+    PRIZE_WINNER: 500,
+    PRIZE_RUNNER_UP: 260,
     GAME_MODE: "Squad (4 Players)",
     MAP: "Bermuda / Purgatory / Kalahari",
     TOURNAMENT_DATE: "2025-10-26T18:00:00",
