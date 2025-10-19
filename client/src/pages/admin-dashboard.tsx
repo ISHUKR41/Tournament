@@ -26,7 +26,8 @@ import {
   Eye,
   Loader2,
   Search,
-  Filter
+  Filter,
+  Gamepad2
 } from "lucide-react";
 import type { Team } from "@shared/schema";
 import {
@@ -38,10 +39,13 @@ import {
 
 interface AdminStats {
   total: number;
+  pubgTeams: number;
+  freeFireTeams: number;
   pending: number;
   approved: number;
   rejected: number;
-  available: number;
+  pubgAvailable: number;
+  freeFireAvailable: number;
 }
 
 export default function AdminDashboard() {
@@ -50,6 +54,7 @@ export default function AdminDashboard() {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [gameTypeFilter, setGameTypeFilter] = useState<string>("all");
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
   const [adminNotes, setAdminNotes] = useState("");
 
@@ -77,7 +82,7 @@ export default function AdminDashboard() {
     return `/api/teams/search?${params.toString()}`;
   };
 
-  const { data: teams = [], isLoading: teamsLoading } = useQuery<Team[]>({
+  const { data: allTeams = [], isLoading: teamsLoading } = useQuery<Team[]>({
     queryKey: ['/api/teams/search', searchQuery, statusFilter],
     queryFn: async () => {
       const url = buildSearchUrl();
@@ -87,6 +92,10 @@ export default function AdminDashboard() {
     },
     enabled: !!admin,
   });
+
+  const teams = gameTypeFilter === 'all' 
+    ? allTeams 
+    : allTeams.filter(team => team.gameType === gameTypeFilter);
 
   useEffect(() => {
     if (selectedTeam) {
@@ -171,9 +180,13 @@ export default function AdminDashboard() {
     },
   });
 
-  const handleExport = async () => {
+  const handleExport = async (gameType?: 'pubg' | 'freefire') => {
     try {
-      const response = await fetch('/api/admin/teams/export', {
+      const url = gameType 
+        ? `/api/admin/teams/export?gameType=${gameType}`
+        : '/api/admin/teams/export';
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -185,18 +198,19 @@ export default function AdminDashboard() {
       }
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `teams-${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.href = downloadUrl;
+      const gameName = gameType === 'pubg' ? 'PUBG' : gameType === 'freefire' ? 'FreeFire' : 'All';
+      a.download = `${gameName}-teams-${new Date().toISOString().split('T')[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(a);
 
       toast({
         title: "Export Successful",
-        description: "Teams data has been exported to Excel",
+        description: `${gameName} teams data exported to Excel and saved to exports/${gameType || 'all'} folder`,
       });
     } catch (error) {
       toast({
@@ -295,14 +309,23 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
             <p className="text-muted-foreground">Welcome, {admin.username}</p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={handleExport} variant="outline" data-testid="button-export-excel">
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => handleExport('pubg')} variant="outline" size="sm" data-testid="button-export-pubg">
               <Download className="w-4 h-4 mr-2" />
-              Export Excel
+              Export PUBG
+            </Button>
+            <Button onClick={() => handleExport('freefire')} variant="outline" size="sm" data-testid="button-export-freefire">
+              <Download className="w-4 h-4 mr-2" />
+              Export Free Fire
+            </Button>
+            <Button onClick={() => handleExport()} variant="outline" size="sm" data-testid="button-export-all">
+              <Download className="w-4 h-4 mr-2" />
+              Export All
             </Button>
             <Button
               onClick={() => logoutMutation.mutate()}
               variant="outline"
+              size="sm"
               disabled={logoutMutation.isPending}
               data-testid="button-logout"
             >
@@ -312,7 +335,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Teams</CardTitle>
@@ -323,6 +346,34 @@ export default function AdminDashboard() {
                 <div className="h-8 bg-secondary/50 rounded animate-pulse"></div>
               ) : (
                 <div className="text-2xl font-bold" data-testid="text-total-teams">{stats?.total || 0}</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">PUBG Teams</CardTitle>
+              <Gamepad2 className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <div className="h-8 bg-secondary/50 rounded animate-pulse"></div>
+              ) : (
+                <div className="text-2xl font-bold" data-testid="text-pubg-teams">{stats?.pubgTeams || 0} / 25</div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Free Fire Teams</CardTitle>
+              <Gamepad2 className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <div className="h-8 bg-secondary/50 rounded animate-pulse"></div>
+              ) : (
+                <div className="text-2xl font-bold" data-testid="text-freefire-teams">{stats?.freeFireTeams || 0} / 25</div>
               )}
             </CardContent>
           </Card>
@@ -385,10 +436,21 @@ export default function AdminDashboard() {
                     data-testid="input-search"
                   />
                 </div>
+                <Select value={gameTypeFilter} onValueChange={setGameTypeFilter}>
+                  <SelectTrigger className="w-full sm:w-40" data-testid="select-game-filter">
+                    <Gamepad2 className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Game" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" data-testid="filter-game-all">All Games</SelectItem>
+                    <SelectItem value="pubg" data-testid="filter-game-pubg">PUBG</SelectItem>
+                    <SelectItem value="freefire" data-testid="filter-game-freefire">Free Fire</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full sm:w-40" data-testid="select-status-filter">
                     <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Filter" />
+                    <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" data-testid="filter-all">All Status</SelectItem>

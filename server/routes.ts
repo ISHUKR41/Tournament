@@ -207,9 +207,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/teams/export", requireAuth, async (_req, res) => {
+  app.get("/api/admin/teams/export", requireAuth, async (req, res) => {
     try {
+      const { gameType } = req.query;
       const teams = await storage.getAllTeams();
+      
+      const filteredTeams = gameType && (gameType === 'pubg' || gameType === 'freefire')
+        ? teams.filter(team => team.gameType === gameType)
+        : teams;
       
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Teams');
@@ -234,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { header: 'Registration Date', key: 'createdAt', width: 20 },
       ];
 
-      teams.forEach(team => {
+      filteredTeams.forEach(team => {
         worksheet.addRow({
           ...team,
           createdAt: new Date(team.createdAt).toLocaleString(),
@@ -244,12 +249,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       worksheet.getRow(1).font = { bold: true };
 
-      const exportsDir = path.join(process.cwd(), 'exports');
+      const baseExportsDir = path.join(process.cwd(), 'exports');
+      const gameFolder = gameType === 'pubg' ? 'pubg' : gameType === 'freefire' ? 'freefire' : 'all';
+      const exportsDir = path.join(baseExportsDir, gameFolder);
+      
       if (!fs.existsSync(exportsDir)) {
         fs.mkdirSync(exportsDir, { recursive: true });
       }
 
-      const filename = `teams-${new Date().toISOString().split('T')[0]}-${Date.now()}.xlsx`;
+      const gameName = gameType === 'pubg' ? 'PUBG' : gameType === 'freefire' ? 'FreeFire' : 'All';
+      const filename = `${gameName}-teams-${new Date().toISOString().split('T')[0]}-${Date.now()}.xlsx`;
       const filepath = path.join(exportsDir, filename);
 
       await workbook.xlsx.writeFile(filepath);

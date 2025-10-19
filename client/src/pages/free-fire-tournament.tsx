@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Users, Calendar, Flame } from "lucide-react";
 import { SlotCounter } from "@/components/tournament/slot-counter";
-import heroImage from "@assets/generated_images/PUBG_tournament_hero_image_76e84b21.png";
+import heroImage from "@assets/generated_images/Free_Fire_Tournament_Hero_12705473.png";
 import { motion } from "framer-motion";
 
 export default function FreeFireTournament() {
