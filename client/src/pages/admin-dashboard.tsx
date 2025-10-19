@@ -575,9 +575,19 @@ export default function AdminDashboard() {
                     <p className="font-semibold">{selectedTeam.teamName}</p>
                   </div>
                   <div>
+                    <p className="text-sm font-medium text-muted-foreground">Game Type</p>
+                    <Badge variant="outline">{selectedTeam.gameType.toUpperCase()}</Badge>
+                  </div>
+                  <div>
                     <p className="text-sm font-medium text-muted-foreground">Status</p>
                     <Badge className={getStatusColor(selectedTeam.status)}>
                       {selectedTeam.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">YouTube Live Stream</p>
+                    <Badge variant={selectedTeam.youtubeVote === 'yes' ? 'default' : 'secondary'}>
+                      {selectedTeam.youtubeVote === 'yes' ? 'Yes' : 'No'}
                     </Badge>
                   </div>
                 </div>
@@ -588,22 +598,30 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Leader</p>
                       <p>{selectedTeam.leaderName} • {selectedTeam.leaderWhatsapp}</p>
-                      <p className="text-sm text-muted-foreground">PUBG ID: {selectedTeam.leaderPubgId}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedTeam.gameType === 'pubg' ? 'PUBG ID' : 'Free Fire UID'}: {selectedTeam.leaderPlayerId}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Player 2</p>
                       <p>{selectedTeam.player2Name}</p>
-                      <p className="text-sm text-muted-foreground">PUBG ID: {selectedTeam.player2PubgId}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedTeam.gameType === 'pubg' ? 'PUBG ID' : 'Free Fire UID'}: {selectedTeam.player2PlayerId}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Player 3</p>
                       <p>{selectedTeam.player3Name}</p>
-                      <p className="text-sm text-muted-foreground">PUBG ID: {selectedTeam.player3PubgId}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedTeam.gameType === 'pubg' ? 'PUBG ID' : 'Free Fire UID'}: {selectedTeam.player3PlayerId}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Player 4</p>
                       <p>{selectedTeam.player4Name}</p>
-                      <p className="text-sm text-muted-foreground">PUBG ID: {selectedTeam.player4PubgId}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedTeam.gameType === 'pubg' ? 'PUBG ID' : 'Free Fire UID'}: {selectedTeam.player4PlayerId}
+                      </p>
                     </div>
                   </div>
                 </div>

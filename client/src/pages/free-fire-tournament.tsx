@@ -47,14 +47,23 @@ export default function FreeFireTournament() {
           </Badge>
 
           <motion.h1 
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-extrabold mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 leading-tight"
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-extrabold mb-8 leading-tight"
             data-testid="text-hero-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
+            style={{
+              textShadow: '0 0 40px rgba(255, 100, 0, 0.5), 0 0 80px rgba(255, 50, 0, 0.3)',
+            }}
           >
             Ultimate Free Fire
-            <span className="block gradient-text mt-3 text-6xl sm:text-7xl md:text-8xl lg:text-9xl">Tournament</span>
+            <span className="block gradient-text mt-3 text-6xl sm:text-7xl md:text-8xl lg:text-9xl" style={{
+              background: 'linear-gradient(135deg, #ff6b00 0%, #ff0000 50%, #ff6b00 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundSize: '200% 200%',
+              animation: 'gradient-shift 3s ease infinite',
+            }}>Tournament</span>
           </motion.h1>
 
           <motion.p 
