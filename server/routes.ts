@@ -1,27 +1,13 @@
-import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
+import type { Express } from "express";
 import { storage } from "./storage";
 import { insertTeamSchema, TOURNAMENT_CONFIG } from "@shared/schema";
+import { requireAuth, signToken, setTokenCookie, clearTokenCookie, getTokenFromRequest, verifyToken } from "./auth";
 import bcrypt from "bcryptjs";
 import ExcelJS from "exceljs";
 import path from "path";
 import fs from "fs";
 
-declare module 'express-session' {
-  interface SessionData {
-    adminId?: number;
-    username?: string;
-  }
-}
-
-function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.adminId) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  next();
-}
-
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { username, password } = req.body;
@@ -36,8 +22,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      req.session.adminId = admin.id;
-      req.session.username = admin.username;
+      const token = signToken({ id: admin.id, username: admin.username });
+      setTokenCookie(res, token);
       
       res.json({ message: "Login successful", username: admin.username });
     } catch (error: any) {
@@ -45,20 +31,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/logout", (req, res) => {
-    req.session.destroy((err: any) => {
-      if (err) {
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      res.json({ message: "Logout successful" });
-    });
+  app.post("/api/admin/logout", (_req, res) => {
+    clearTokenCookie(res);
+    res.json({ message: "Logout successful" });
   });
 
   app.get("/api/admin/me", (req, res) => {
-    if (!req.session.adminId) {
+    const token = getTokenFromRequest(req);
+    if (!token) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    res.json({ username: req.session.username });
+    const payload = verifyToken(token);
+    if (!payload) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    res.json({ username: payload.username });
   });
 
   app.get("/api/teams", async (_req, res) => {
@@ -278,8 +265,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-
-  const httpServer = createServer(app);
-
-  return httpServer;
 }

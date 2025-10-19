@@ -21,6 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { insertTeamSchema, type InsertTeam } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { compressImage } from "@/lib/imageCompression";
 import paymentQr from "@assets/pubg qr_1760564389416.jpg";
 
 interface GameRegistrationFormProps {
@@ -102,18 +103,32 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please select an image smaller than 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setIsLoading(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        setImagePreview(base64);
-        form.setValue("paymentScreenshot", base64);
+      try {
+        const compressed = await compressImage(file, 0.3);
+        setImagePreview(compressed);
+        form.setValue("paymentScreenshot", compressed);
+      } catch (error) {
+        toast({
+          title: "Image Processing Failed",
+          description: "Could not process the image. Please try another file.",
+          variant: "destructive",
+        });
+      } finally {
         setIsLoading(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -127,8 +142,6 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
     <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
       <Card 
         className="w-full h-full sm:h-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl max-h-screen sm:max-h-[95vh] md:max-h-[90vh] overflow-y-auto relative rounded-none sm:rounded-lg border-0 sm:border shadow-none sm:shadow-lg"
-        data-aos="zoom-in"
-        data-aos-duration="300"
       >
         {/* Sticky Header */}
         <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b p-4 sm:p-5 md:p-6 flex items-center justify-between">
@@ -157,11 +170,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-7 md:space-y-8">
             {/* Team Information */}
-            <div 
-              className="space-y-4 sm:space-y-5"
-              data-aos="fade-up"
-              data-aos-delay="100"
-            >
+            <div className="space-y-4 sm:space-y-5">
               <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
                 <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
                 Team Information
@@ -247,11 +256,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Player 2 */}
-            <div 
-              className="space-y-4 sm:space-y-5"
-              data-aos="fade-up"
-              data-aos-delay="150"
-            >
+            <div className="space-y-4 sm:space-y-5">
               <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
                 <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
                 Player 2
@@ -298,11 +303,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Player 3 */}
-            <div 
-              className="space-y-4 sm:space-y-5"
-              data-aos="fade-up"
-              data-aos-delay="200"
-            >
+            <div className="space-y-4 sm:space-y-5">
               <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
                 <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
                 Player 3
@@ -349,11 +350,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Player 4 */}
-            <div 
-              className="space-y-4 sm:space-y-5"
-              data-aos="fade-up"
-              data-aos-delay="250"
-            >
+            <div className="space-y-4 sm:space-y-5">
               <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
                 <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
                 Player 4
@@ -400,11 +397,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* YouTube Live Stream Vote */}
-            <div 
-              className="space-y-4 sm:space-y-5"
-              data-aos="fade-up"
-              data-aos-delay="300"
-            >
+            <div className="space-y-4 sm:space-y-5">
               <FormField
                 control={form.control}
                 name="youtubeVote"
@@ -439,11 +432,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Payment Section */}
-            <div 
-              className="space-y-4 sm:space-y-5"
-              data-aos="fade-up"
-              data-aos-delay="350"
-            >
+            <div className="space-y-4 sm:space-y-5">
               <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
                 <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
                 Payment Information
@@ -512,10 +501,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                           )}
                         </div>
                         {imagePreview && !isLoading && (
-                          <div 
-                            className="relative w-full max-w-md mx-auto"
-                            data-aos="zoom-in"
-                          >
+                          <div className="relative w-full max-w-md mx-auto">
                             <div className="absolute -top-2 -right-2 z-10 bg-green-500 rounded-full p-1 sm:p-1.5 shadow-lg">
                               <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                             </div>
@@ -538,10 +524,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Terms and Conditions */}
-            <div
-              data-aos="fade-up"
-              data-aos-delay="400"
-            >
+            <div>
               <FormField
                 control={form.control}
                 name="agreedToTerms"
@@ -570,11 +553,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Submit Buttons */}
-            <div 
-              className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4"
-              data-aos="fade-up"
-              data-aos-delay="450"
-            >
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
               <Button
                 type="submit"
                 disabled={registerMutation.isPending}

@@ -20,8 +20,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// Request logging
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
+  });
+  next();
+});
+
 // Register all API routes
-registerRoutes(app);
+registerRoutes(app).catch(err => {
+  console.error('Failed to register routes:', err);
+});
+
+// Global error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  res.status(status).json({ message });
+});
 
 // Export for Vercel
 export default app;
