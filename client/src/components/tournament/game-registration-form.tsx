@@ -61,6 +61,8 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
       queryClient.invalidateQueries({ queryKey: ['/api/teams/count'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/teams/count/${gameType}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       toast({
         title: "Registration Successful!",
         description: "Your team has been registered. Check WhatsApp for updates.",
