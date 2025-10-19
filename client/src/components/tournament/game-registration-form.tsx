@@ -75,7 +75,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
       youtubeVote: "no",
       transactionId: "",
       paymentScreenshot: "",
-      agreedToTerms: 0 as any,
+      agreedToTerms: 0,
     },
   });
 
@@ -133,7 +133,11 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
   };
 
   const onSubmit = (data: InsertTeam) => {
-    registerMutation.mutate(data);
+    const sanitizedData = {
+      ...data,
+      agreedToTerms: Number(data.agreedToTerms) === 1 ? 1 : 0,
+    };
+    registerMutation.mutate(sanitizedData);
   };
 
   const playerIdLabel = gameType === "pubg" ? "PUBG ID" : "Free Fire UID";
@@ -533,7 +537,10 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                     <FormControl>
                       <Checkbox
                         checked={field.value === 1}
-                        onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
+                        onCheckedChange={(checked) => {
+                          const value = checked === true ? 1 : 0;
+                          field.onChange(value);
+                        }}
                         className="mt-1 h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200 hover:scale-110"
                         data-testid="checkbox-agree-terms"
                       />
