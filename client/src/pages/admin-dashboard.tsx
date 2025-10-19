@@ -541,15 +541,63 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
+                            {team.status === "pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => updateStatusMutation.mutate({ id: team.id, status: "approved" })}
+                                  disabled={updateStatusMutation.isPending}
+                                  data-testid={`button-approve-${team.id}`}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => updateStatusMutation.mutate({ id: team.id, status: "rejected" })}
+                                  disabled={updateStatusMutation.isPending}
+                                  data-testid={`button-reject-${team.id}`}
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {team.status === "approved" && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updateStatusMutation.mutate({ id: team.id, status: "rejected" })}
+                                disabled={updateStatusMutation.isPending}
+                                data-testid={`button-reject-${team.id}`}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            )}
+                            {team.status === "rejected" && (
+                              <Button
+                                size="sm"
+                                onClick={() => updateStatusMutation.mutate({ id: team.id, status: "approved" })}
+                                disabled={updateStatusMutation.isPending}
+                                data-testid={`button-approve-${team.id}`}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => setSelectedTeam(team)}
                               data-testid={`button-view-${team.id}`}
                             >
-                              <Eye className="w-4 h-4 mr-2" />
-                              View
+                              <Eye className="w-4 h-4 mr-1" />
+                              Details
                             </Button>
                           </div>
                         </div>

@@ -1,5 +1,6 @@
 import express from "express";
 import { registerRoutes } from "../server/routes";
+import { initializeDatabase } from "../server/init-db";
 
 const app = express();
 
@@ -29,6 +30,17 @@ app.use((req, res, next) => {
   });
   next();
 });
+
+// Initialize database (create tables and default admin) on first cold start
+let initialized = false;
+if (!initialized) {
+  initializeDatabase().then(() => {
+    initialized = true;
+    console.log('✅ Database initialized for Vercel deployment');
+  }).catch(err => {
+    console.error('❌ Database initialization failed:', err);
+  });
+}
 
 // Register all API routes
 registerRoutes(app).catch(err => {
