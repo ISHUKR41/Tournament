@@ -20,6 +20,9 @@ function Router() {
       <Route path="/free-fire" component={FreeFireTournament} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin">
+        {() => <Redirect to="/admin/dashboard" />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
