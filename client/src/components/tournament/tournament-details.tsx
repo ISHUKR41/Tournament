@@ -1,54 +1,64 @@
 import { Card } from "@/components/ui/card";
 import { Gamepad2, Map, Smartphone, Users, IndianRupee, Trophy } from "lucide-react";
-import { TOURNAMENT_CONFIG } from "@shared/schema";
 import { motion } from "framer-motion";
 
-const details = [
-  {
-    icon: Gamepad2,
-    label: "Game Mode",
-    value: TOURNAMENT_CONFIG.GAME_MODE,
-    color: "text-chart-1",
-    bg: "bg-chart-1/10",
-  },
-  {
-    icon: Map,
-    label: "Map",
-    value: TOURNAMENT_CONFIG.MAP,
-    color: "text-chart-2",
-    bg: "bg-chart-2/10",
-  },
-  {
-    icon: Smartphone,
-    label: "Platform",
-    value: "Mobile Only",
-    color: "text-chart-3",
-    bg: "bg-chart-3/10",
-  },
-  {
-    icon: Users,
-    label: "Total Slots",
-    value: `${TOURNAMENT_CONFIG.MAX_TEAMS} Teams`,
-    color: "text-chart-4",
-    bg: "bg-chart-4/10",
-  },
-  {
-    icon: IndianRupee,
-    label: "Entry Fee",
-    value: `₹${TOURNAMENT_CONFIG.ENTRY_FEE} per team`,
-    color: "text-chart-1",
-    bg: "bg-chart-1/10",
-  },
-  {
-    icon: Trophy,
-    label: "Prize Pool",
-    value: `₹${TOURNAMENT_CONFIG.PRIZE_WINNER + TOURNAMENT_CONFIG.PRIZE_RUNNER_UP}`,
-    color: "text-chart-4",
-    bg: "bg-chart-4/10",
-  },
-];
+interface TournamentDetailsProps {
+  config: {
+    MAX_TEAMS: number;
+    ENTRY_FEE: number;
+    PRIZE_WINNER: number;
+    PRIZE_RUNNER_UP: number;
+    GAME_MODE: string;
+    MAP: string;
+  };
+}
 
-export function TournamentDetails() {
+export function TournamentDetails({ config }: TournamentDetailsProps) {
+  const details = [
+    {
+      icon: Gamepad2,
+      label: "Game Mode",
+      value: config.GAME_MODE,
+      color: "text-chart-1",
+      bg: "bg-chart-1/10",
+    },
+    {
+      icon: Map,
+      label: "Map",
+      value: config.MAP,
+      color: "text-chart-2",
+      bg: "bg-chart-2/10",
+    },
+    {
+      icon: Smartphone,
+      label: "Platform",
+      value: "Mobile Only",
+      color: "text-chart-3",
+      bg: "bg-chart-3/10",
+    },
+    {
+      icon: Users,
+      label: "Total Slots",
+      value: `${config.MAX_TEAMS} Teams`,
+      color: "text-chart-4",
+      bg: "bg-chart-4/10",
+    },
+    {
+      icon: IndianRupee,
+      label: "Entry Fee",
+      value: `₹${config.ENTRY_FEE} per team`,
+      color: "text-chart-1",
+      bg: "bg-chart-1/10",
+    },
+    {
+      icon: Trophy,
+      label: "Prize Pool",
+      value: `₹${config.PRIZE_WINNER + config.PRIZE_RUNNER_UP}`,
+      color: "text-chart-4",
+      bg: "bg-chart-4/10",
+    },
+  ];
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

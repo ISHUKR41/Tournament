@@ -79,6 +79,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/teams/count/:gameType", async (req, res) => {
+    try {
+      const { gameType } = req.params;
+      if (gameType !== 'pubg' && gameType !== 'freefire') {
+        return res.status(400).json({ message: "Invalid game type" });
+      }
+      const count = await storage.getTeamCountByGameType(gameType);
+      res.json({ count });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/teams", async (req, res) => {
     try {
       const validatedData = insertTeamSchema.parse(req.body);
@@ -132,16 +145,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/stats", requireAuth, async (_req, res) => {
     try {
       const totalTeams = await storage.getTeamCount();
+      const pubgTeams = await storage.getTeamCountByGameType("pubg");
+      const freeFireTeams = await storage.getTeamCountByGameType("freefire");
       const pendingTeams = await storage.getTeamCountByStatus("pending");
       const approvedTeams = await storage.getTeamCountByStatus("approved");
       const rejectedTeams = await storage.getTeamCountByStatus("rejected");
       
       res.json({
         total: totalTeams,
+        pubgTeams,
+        freeFireTeams,
         pending: pendingTeams,
         approved: approvedTeams,
         rejected: rejectedTeams,
-        available: TOURNAMENT_CONFIG.MAX_TEAMS - totalTeams,
+        pubgAvailable: TOURNAMENT_CONFIG.PUBG.MAX_TEAMS - pubgTeams,
+        freeFireAvailable: TOURNAMENT_CONFIG.FREE_FIRE.MAX_TEAMS - freeFireTeams,
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -197,16 +215,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const worksheet = workbook.addWorksheet('Teams');
       
       worksheet.columns = [
+        { header: 'Game Type', key: 'gameType', width: 15 },
         { header: 'Team Name', key: 'teamName', width: 20 },
         { header: 'Leader Name', key: 'leaderName', width: 20 },
         { header: 'Leader WhatsApp', key: 'leaderWhatsapp', width: 15 },
-        { header: 'Leader PUBG ID', key: 'leaderPubgId', width: 20 },
+        { header: 'Leader Player ID', key: 'leaderPlayerId', width: 20 },
         { header: 'Player 2 Name', key: 'player2Name', width: 20 },
-        { header: 'Player 2 PUBG ID', key: 'player2PubgId', width: 20 },
+        { header: 'Player 2 Player ID', key: 'player2PlayerId', width: 20 },
         { header: 'Player 3 Name', key: 'player3Name', width: 20 },
-        { header: 'Player 3 PUBG ID', key: 'player3PubgId', width: 20 },
+        { header: 'Player 3 Player ID', key: 'player3PlayerId', width: 20 },
         { header: 'Player 4 Name', key: 'player4Name', width: 20 },
-        { header: 'Player 4 PUBG ID', key: 'player4PubgId', width: 20 },
+        { header: 'Player 4 Player ID', key: 'player4PlayerId', width: 20 },
+        { header: 'YouTube Live Vote', key: 'youtubeVote', width: 15 },
         { header: 'Transaction ID', key: 'transactionId', width: 25 },
         { header: 'Payment Screenshot', key: 'paymentScreenshot', width: 50 },
         { header: 'Status', key: 'status', width: 15 },

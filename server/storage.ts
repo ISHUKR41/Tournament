@@ -8,6 +8,7 @@ export interface IStorage {
   getTeam(id: string): Promise<Team | undefined>;
   createTeam(team: InsertTeam): Promise<Team>;
   getTeamCount(): Promise<number>;
+  getTeamCountByGameType(gameType: string): Promise<number>;
   getTeamCountByStatus(status?: string): Promise<number>;
   updateTeamStatus(id: string, status: string): Promise<Team>;
   updateTeamNotes(id: string, notes: string): Promise<Team>;
@@ -28,10 +29,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTeam(insertTeam: InsertTeam): Promise<Team> {
-    const teamCount = await this.getTeamCount();
+    const gameType = insertTeam.gameType;
+    const teamCount = await this.getTeamCountByGameType(gameType);
     
-    if (teamCount >= TOURNAMENT_CONFIG.MAX_TEAMS) {
-      throw new Error("Tournament is full. All slots have been filled.");
+    const maxTeams = gameType === 'pubg' ? TOURNAMENT_CONFIG.PUBG.MAX_TEAMS : TOURNAMENT_CONFIG.FREE_FIRE.MAX_TEAMS;
+    
+    if (teamCount >= maxTeams) {
+      throw new Error(`Tournament is full. All ${maxTeams} slots for ${gameType.toUpperCase()} have been filled.`);
     }
 
     const id = randomUUID();
@@ -48,6 +52,14 @@ export class DatabaseStorage implements IStorage {
 
   async getTeamCount(): Promise<number> {
     const [result] = await db.select({ count: count() }).from(teams);
+    return result.count;
+  }
+
+  async getTeamCountByGameType(gameType: string): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(teams)
+      .where(eq(teams.gameType, gameType));
     return result.count;
   }
 

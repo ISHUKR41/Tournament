@@ -1,18 +1,22 @@
 import { Card } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { TOURNAMENT_CONFIG } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
 
-export function SlotCounter() {
+interface SlotCounterProps {
+  gameType: "pubg" | "freefire";
+  maxTeams: number;
+}
+
+export function SlotCounter({ gameType, maxTeams }: SlotCounterProps) {
   const { data: countData, isLoading } = useQuery<{ count: number }>({
-    queryKey: ['/api/teams/count'],
+    queryKey: [`/api/teams/count/${gameType}`],
     refetchInterval: 5000,
   });
 
   const teamsCount = countData?.count || 0;
-  const slotsRemaining = TOURNAMENT_CONFIG.MAX_TEAMS - teamsCount;
-  const percentFilled = (teamsCount / TOURNAMENT_CONFIG.MAX_TEAMS) * 100;
+  const slotsRemaining = maxTeams - teamsCount;
+  const percentFilled = (teamsCount / maxTeams) * 100;
   const isAlmostFull = slotsRemaining <= 5;
 
   return (
@@ -38,7 +42,7 @@ export function SlotCounter() {
               </span>
               <span className="text-muted-foreground mx-2">/</span>
               <span className="text-2xl font-display font-semibold text-muted-foreground">
-                {TOURNAMENT_CONFIG.MAX_TEAMS}
+                {maxTeams}
               </span>
             </div>
             <span 

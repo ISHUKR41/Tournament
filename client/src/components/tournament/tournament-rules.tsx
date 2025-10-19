@@ -13,70 +13,76 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const rules = [
-  {
-    icon: Users,
-    title: "Team Composition",
-    description: "Each team must have exactly 4 members. All player details must be accurate and final.",
-    variant: "default" as const,
-  },
-  {
-    icon: Shield,
-    title: "Platform Restriction",
-    description: "Only mobile players are allowed. Emulator players are strictly prohibited.",
-    variant: "default" as const,
-  },
-  {
-    icon: Ban,
-    title: "Fair Play Policy",
-    description: "No hacks, cheats, glitches, or third-party tools. Violations lead to immediate disqualification.",
-    variant: "destructive" as const,
-  },
-  {
-    icon: CheckCircle,
-    title: "Registration Finality",
-    description: "Team names and PUBG IDs are final after submission. No changes will be permitted.",
-    variant: "default" as const,
-  },
-  {
-    icon: XCircle,
-    title: "No Refund Policy",
-    description: "Once registered, fees are non-refundable under any circumstances.",
-    variant: "destructive" as const,
-  },
-  {
-    icon: Clock,
-    title: "Punctuality Required",
-    description: "Room ID and password shared 15 minutes before match. Teams must join on time - no late entries.",
-    variant: "default" as const,
-  },
-  {
-    icon: MessageSquare,
-    title: "Code of Conduct",
-    description: "Good behavior and fair play are mandatory. Toxic behavior results in disqualification.",
-    variant: "default" as const,
-  },
-  {
-    icon: Video,
-    title: "Streaming Allowed",
-    description: "Recording or streaming is permitted, but please mention the official tournament name.",
-    variant: "default" as const,
-  },
-  {
-    icon: AlertTriangle,
-    title: "Disconnect Policy",
-    description: "If a player disconnects during match, no rematch or refund will be given.",
-    variant: "destructive" as const,
-  },
-  {
-    icon: Wallet,
-    title: "Prize Distribution",
-    description: "Top 2 teams receive prize money directly via UPI/Paytm/PhonePe after verification.",
-    variant: "default" as const,
-  },
-];
+interface TournamentRulesProps {
+  gameType: "pubg" | "freefire";
+}
 
-export function TournamentRules() {
+export function TournamentRules({ gameType }: TournamentRulesProps) {
+  const playerIdLabel = gameType === "pubg" ? "PUBG IDs" : "Free Fire UIDs";
+  
+  const rules = [
+    {
+      icon: Users,
+      title: "Team Composition",
+      description: "Each team must have exactly 4 members. All player details must be accurate and final.",
+      variant: "default" as const,
+    },
+    {
+      icon: Shield,
+      title: "Platform Restriction",
+      description: "Only mobile players are allowed. Emulator players are strictly prohibited.",
+      variant: "default" as const,
+    },
+    {
+      icon: Ban,
+      title: "Fair Play Policy",
+      description: "No hacks, cheats, glitches, or third-party tools. Violations lead to immediate disqualification.",
+      variant: "destructive" as const,
+    },
+    {
+      icon: CheckCircle,
+      title: "Registration Finality",
+      description: `Team names and ${playerIdLabel} are final after submission. No changes will be permitted.`,
+      variant: "default" as const,
+    },
+    {
+      icon: XCircle,
+      title: "No Refund Policy",
+      description: "Once registered, fees are non-refundable under any circumstances.",
+      variant: "destructive" as const,
+    },
+    {
+      icon: Clock,
+      title: "Punctuality Required",
+      description: "Room ID and password shared 15 minutes before match. Teams must join on time - no late entries.",
+      variant: "default" as const,
+    },
+    {
+      icon: MessageSquare,
+      title: "Code of Conduct",
+      description: "Good behavior and fair play are mandatory. Toxic behavior results in disqualification.",
+      variant: "default" as const,
+    },
+    {
+      icon: Video,
+      title: "Streaming Allowed",
+      description: "Recording or streaming is permitted, but please mention the official tournament name.",
+      variant: "default" as const,
+    },
+    {
+      icon: AlertTriangle,
+      title: "Disconnect Policy",
+      description: "If a player disconnects during match, no rematch or refund will be given.",
+      variant: "destructive" as const,
+    },
+    {
+      icon: Wallet,
+      title: "Prize Distribution",
+      description: "Top 2 teams receive prize money directly via UPI/Paytm/PhonePe after verification.",
+      variant: "default" as const,
+    },
+  ];
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

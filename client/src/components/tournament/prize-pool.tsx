@@ -1,9 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { Trophy, Medal, Crown, Sparkles } from "lucide-react";
-import { TOURNAMENT_CONFIG } from "@shared/schema";
 import { motion } from "framer-motion";
 
-export function PrizePool() {
+interface PrizePoolProps {
+  config: {
+    PRIZE_WINNER: number;
+    PRIZE_RUNNER_UP: number;
+  };
+}
+
+export function PrizePool({ config }: PrizePoolProps) {
   return (
     <section className="relative py-20 md:py-32 overflow-hidden">
       {/* Animated Background */}
@@ -53,7 +59,7 @@ export function PrizePool() {
                 </div>
                 <h3 className="text-3xl font-display font-bold mb-3">Winner</h3>
                 <p className="text-6xl md:text-7xl font-display font-extrabold gradient-text mb-3 group-hover:scale-110 transition-transform duration-300">
-                  ₹{TOURNAMENT_CONFIG.PRIZE_WINNER}
+                  ₹{config.PRIZE_WINNER}
                 </p>
                 <p className="text-foreground/70 text-lg font-semibold">1st Place Prize</p>
               </div>
@@ -76,7 +82,7 @@ export function PrizePool() {
                 </div>
                 <h3 className="text-3xl font-display font-bold mb-3">Runner-up</h3>
                 <p className="text-6xl md:text-7xl font-display font-extrabold gradient-text mb-3 group-hover:scale-110 transition-transform duration-300">
-                  ₹{TOURNAMENT_CONFIG.PRIZE_RUNNER_UP}
+                  ₹{config.PRIZE_RUNNER_UP}
                 </p>
                 <p className="text-foreground/70 text-lg font-semibold">2nd Place Prize</p>
               </div>

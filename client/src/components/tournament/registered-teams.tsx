@@ -5,11 +5,17 @@ import { useQuery } from "@tanstack/react-query";
 import type { Team } from "@shared/schema";
 import { motion } from "framer-motion";
 
-export function RegisteredTeams() {
-  const { data: teams = [], isLoading } = useQuery<Team[]>({
+interface RegisteredTeamsProps {
+  gameType: "pubg" | "freefire";
+}
+
+export function RegisteredTeams({ gameType }: RegisteredTeamsProps) {
+  const { data: allTeams = [], isLoading } = useQuery<Team[]>({
     queryKey: ['/api/teams'],
     refetchInterval: 5000,
   });
+
+  const teams = allTeams.filter(team => team.gameType === gameType);
 
   const containerVariants = {
     hidden: { opacity: 0 },

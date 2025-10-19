@@ -13,16 +13,18 @@ export const adminUsers = pgTable("admin_users", {
 // Tournament Team Registration Schema
 export const teams = pgTable("teams", {
   id: varchar("id").primaryKey(),
+  gameType: text("game_type").notNull().default("pubg"),
   teamName: text("team_name").notNull(),
   leaderName: text("leader_name").notNull(),
   leaderWhatsapp: text("leader_whatsapp").notNull(),
-  leaderPubgId: text("leader_pubg_id").notNull(),
+  leaderPlayerId: text("leader_player_id").notNull(),
   player2Name: text("player2_name").notNull(),
-  player2PubgId: text("player2_pubg_id").notNull(),
+  player2PlayerId: text("player2_player_id").notNull(),
   player3Name: text("player3_name").notNull(),
-  player3PubgId: text("player3_pubg_id").notNull(),
+  player3PlayerId: text("player3_player_id").notNull(),
   player4Name: text("player4_name").notNull(),
-  player4PubgId: text("player4_pubg_id").notNull(),
+  player4PlayerId: text("player4_player_id").notNull(),
+  youtubeVote: text("youtube_vote").notNull().default("no"),
   transactionId: text("transaction_id").notNull(),
   paymentScreenshot: text("payment_screenshot").notNull(),
   agreedToTerms: integer("agreed_to_terms").notNull().default(1),
@@ -39,16 +41,22 @@ export const insertTeamSchema = createInsertSchema(teams).omit({
   status: true,
   adminNotes: true,
 }).extend({
+  gameType: z.enum(["pubg", "freefire"], {
+    errorMap: () => ({ message: "Game type must be either PUBG or Free Fire" }),
+  }),
   teamName: z.string().min(3, "Team name must be at least 3 characters").max(50, "Team name too long"),
   leaderName: z.string().min(2, "Leader name required"),
   leaderWhatsapp: z.string().regex(/^\d{10}$/, "WhatsApp number must be 10 digits"),
-  leaderPubgId: z.string().min(3, "Valid PUBG ID required"),
+  leaderPlayerId: z.string().min(3, "Valid Player ID required"),
   player2Name: z.string().min(2, "Player 2 name required"),
-  player2PubgId: z.string().min(3, "Valid PUBG ID required"),
+  player2PlayerId: z.string().min(3, "Valid Player ID required"),
   player3Name: z.string().min(2, "Player 3 name required"),
-  player3PubgId: z.string().min(3, "Valid PUBG ID required"),
+  player3PlayerId: z.string().min(3, "Valid Player ID required"),
   player4Name: z.string().min(2, "Player 4 name required"),
-  player4PubgId: z.string().min(3, "Valid PUBG ID required"),
+  player4PlayerId: z.string().min(3, "Valid Player ID required"),
+  youtubeVote: z.enum(["yes", "no"], {
+    errorMap: () => ({ message: "Please select Yes or No" }),
+  }),
   transactionId: z.string().min(5, "Transaction ID required"),
   paymentScreenshot: z.string().min(1, "Payment screenshot required"),
   agreedToTerms: z.number().refine((val) => val === 1, {
@@ -69,11 +77,22 @@ export type Admin = typeof adminUsers.$inferSelect;
 
 // Tournament Configuration
 export const TOURNAMENT_CONFIG = {
-  MAX_TEAMS: 25,
-  ENTRY_FEE: 80,
-  PRIZE_WINNER: 1000,
-  PRIZE_RUNNER_UP: 400,
-  GAME_MODE: "Squad (4 Players)",
-  MAP: "Erangel (Classic)",
-  TOURNAMENT_DATE: "2025-10-25T18:00:00", // Example date
+  PUBG: {
+    MAX_TEAMS: 25,
+    ENTRY_FEE: 80,
+    PRIZE_WINNER: 1000,
+    PRIZE_RUNNER_UP: 400,
+    GAME_MODE: "Squad (4 Players)",
+    MAP: "Erangel (Classic)",
+    TOURNAMENT_DATE: "2025-10-25T18:00:00",
+  },
+  FREE_FIRE: {
+    MAX_TEAMS: 25,
+    ENTRY_FEE: 80,
+    PRIZE_WINNER: 1000,
+    PRIZE_RUNNER_UP: 400,
+    GAME_MODE: "Squad (4 Players)",
+    MAP: "Bermuda / Purgatory / Kalahari",
+    TOURNAMENT_DATE: "2025-10-26T18:00:00",
+  },
 } as const;

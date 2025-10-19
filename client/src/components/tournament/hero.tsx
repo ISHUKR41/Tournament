@@ -7,9 +7,11 @@ import heroImage from "@assets/generated_images/PUBG_tournament_hero_image_76e84
 
 interface HeroProps {
   onRegisterClick: () => void;
+  gameType: "pubg" | "freefire";
+  maxTeams: number;
 }
 
-export function Hero({ onRegisterClick }: HeroProps) {
+export function Hero({ onRegisterClick, gameType, maxTeams }: HeroProps) {
   return (
     <div className="relative min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Enhanced Overlay */}
@@ -79,7 +81,7 @@ export function Hero({ onRegisterClick }: HeroProps) {
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-          <SlotCounter />
+          <SlotCounter gameType={gameType} maxTeams={maxTeams} />
           <CountdownTimer />
         </div>
       </div>
