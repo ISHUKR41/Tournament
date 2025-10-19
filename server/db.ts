@@ -22,11 +22,11 @@ function initializeDb() {
     
     if (dbUrl.includes('neon') || dbUrl.includes('wss://')) {
       console.log("📊 Using Neon serverless database");
-      _pool = new NeonPool({ connectionString: dbUrl });
+      _pool = new NeonPool({ connectionString: dbUrl, max: 1 }); // max: 1 for Vercel serverless
       _db = drizzleNeon({ client: _pool as NeonPool, schema });
     } else {
       console.log("📊 Using PostgreSQL database");
-      _pool = new PgPool({ connectionString: dbUrl });
+      _pool = new PgPool({ connectionString: dbUrl, max: 1 }); // max: 1 for Vercel serverless
       _db = drizzlePg({ client: _pool as PgPool, schema });
     }
   }
