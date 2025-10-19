@@ -196,13 +196,74 @@ Every registration form includes a voting option:
 
 ## 🚀 Running the Application
 
+### Development (Replit)
 The workflow "Start application" runs `npm run dev` which:
-1. Starts PostgreSQL database
+1. Connects to Neon PostgreSQL cloud database
 2. Initializes tables if needed
 3. Creates default admin user
 4. Starts Express server (backend)
 5. Starts Vite server (frontend)
 6. Serves on port 5000
+
+### Production (Vercel Deployment)
+
+#### Database Setup
+This application uses **Neon PostgreSQL** for cloud database with real-time sync across all users and instances.
+
+**✅ Database is already configured in Replit:**
+- Connected to Neon serverless PostgreSQL
+- DATABASE_URL is set in environment variables
+- Data syncs across all users in real-time
+- Works seamlessly on Vercel without changes
+
+#### Deploying to Vercel
+
+1. **Push to GitHub:**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <your-github-repo>
+   git push -u origin main
+   ```
+
+2. **Import to Vercel:**
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will auto-detect the configuration from `vercel.json`
+
+3. **Set Environment Variables in Vercel:**
+   Go to Project Settings → Environment Variables and add:
+   
+   **Required:**
+   - `DATABASE_URL` - Your Neon PostgreSQL connection string (get from Replit secrets or create new Neon database)
+   - `SESSION_SECRET` - Random string for session encryption (generate with `openssl rand -base64 32`)
+   
+   **Optional (for Pusher real-time features):**
+   - `PUSHER_APP_ID` - Your Pusher app ID
+   - `PUSHER_KEY` - Your Pusher key
+   - `PUSHER_SECRET` - Your Pusher secret
+   - `PUSHER_CLUSTER` - Your Pusher cluster (e.g., "ap2")
+   - `VITE_PUSHER_KEY` - Same as PUSHER_KEY (for frontend)
+   - `VITE_PUSHER_CLUSTER` - Same as PUSHER_CLUSTER (for frontend)
+
+4. **Deploy:**
+   - Click "Deploy"
+   - Vercel will build and deploy automatically
+   - Your app will be live at `https://your-app.vercel.app`
+
+#### Post-Deployment
+- Access admin panel at: `https://your-app.vercel.app/admin/login`
+- Default credentials: `admin` / `admin123`
+- **IMPORTANT:** Change the admin password immediately after first login!
+
+#### Database Migration on Vercel
+The app automatically runs database initialization on first deployment:
+- Creates `admin_users` table
+- Creates `teams` table
+- Creates default admin user
+- All data is stored in Neon PostgreSQL cloud database
 
 ## 📊 Database Schema
 
