@@ -1,0 +1,853 @@
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// server/index.ts
+import express2 from "express";
+import session from "express-session";
+
+// server/routes.ts
+import { createServer } from "http";
+
+// shared/schema.ts
+var schema_exports = {};
+__export(schema_exports, {
+  TOURNAMENT_CONFIG: () => TOURNAMENT_CONFIG,
+  adminUsers: () => adminUsers,
+  insertAdminSchema: () => insertAdminSchema,
+  insertTeamSchema: () => insertTeamSchema,
+  teams: () => teams
+});
+import { pgTable, text, varchar, integer, timestamp, serial } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+var adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+var teams = pgTable("teams", {
+  id: varchar("id").primaryKey(),
+  gameType: text("game_type").notNull().default("pubg"),
+  teamName: text("team_name").notNull(),
+  leaderName: text("leader_name").notNull(),
+  leaderWhatsapp: text("leader_whatsapp").notNull(),
+  leaderPlayerId: text("leader_player_id").notNull(),
+  player2Name: text("player2_name").notNull(),
+  player2PlayerId: text("player2_player_id").notNull(),
+  player3Name: text("player3_name").notNull(),
+  player3PlayerId: text("player3_player_id").notNull(),
+  player4Name: text("player4_name").notNull(),
+  player4PlayerId: text("player4_player_id").notNull(),
+  youtubeVote: text("youtube_vote").notNull().default("no"),
+  transactionId: text("transaction_id").notNull(),
+  paymentScreenshot: text("payment_screenshot").notNull(),
+  agreedToTerms: integer("agreed_to_terms").notNull().default(1),
+  status: text("status").notNull().default("pending"),
+  adminNotes: text("admin_notes"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+var insertTeamSchema = createInsertSchema(teams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+  adminNotes: true
+}).extend({
+  gameType: z.enum(["pubg", "freefire"], {
+    errorMap: () => ({ message: "Game type must be either PUBG or Free Fire" })
+  }),
+  teamName: z.string().min(3, "Team name must be at least 3 characters").max(50, "Team name too long"),
+  leaderName: z.string().min(2, "Leader name required"),
+  leaderWhatsapp: z.string().regex(/^\d{10}$/, "WhatsApp number must be 10 digits"),
+  leaderPlayerId: z.string().min(3, "Valid Player ID required"),
+  player2Name: z.string().min(2, "Player 2 name required"),
+  player2PlayerId: z.string().min(3, "Valid Player ID required"),
+  player3Name: z.string().min(2, "Player 3 name required"),
+  player3PlayerId: z.string().min(3, "Valid Player ID required"),
+  player4Name: z.string().min(2, "Player 4 name required"),
+  player4PlayerId: z.string().min(3, "Valid Player ID required"),
+  youtubeVote: z.enum(["yes", "no"], {
+    errorMap: () => ({ message: "Please select Yes or No" })
+  }),
+  transactionId: z.string().min(5, "Transaction ID required"),
+  paymentScreenshot: z.string().min(1, "Payment screenshot required"),
+  agreedToTerms: z.number().refine((val) => val === 1, {
+    message: "You must agree to terms and conditions"
+  })
+});
+var insertAdminSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true
+});
+var TOURNAMENT_CONFIG = {
+  PUBG: {
+    MAX_TEAMS: 25,
+    ENTRY_FEE: 80,
+    PRIZE_WINNER: 1e3,
+    PRIZE_RUNNER_UP: 400,
+    GAME_MODE: "Squad (4 Players)",
+    MAP: "Erangel (Classic)",
+    TOURNAMENT_DATE: "2025-10-25T18:00:00"
+  },
+  FREE_FIRE: {
+    MAX_TEAMS: 12,
+    ENTRY_FEE: 80,
+    PRIZE_WINNER: 500,
+    PRIZE_RUNNER_UP: 260,
+    GAME_MODE: "Squad (4 Players)",
+    MAP: "Bermuda / Purgatory / Kalahari",
+    TOURNAMENT_DATE: "2025-10-26T18:00:00"
+  }
+};
+
+// server/storage.ts
+import { randomUUID } from "crypto";
+
+// server/db.ts
+import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
+import { Pool as PgPool } from "pg";
+import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import ws from "ws";
+neonConfig.webSocketConstructor = ws;
+var _pool = null;
+var _db = null;
+function initializeDb() {
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.trim() === "") {
+    throw new Error(
+      "DATABASE_URL must be set. Did you forget to provision a database?"
+    );
+  }
+  if (!_pool) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl.includes("neon") || dbUrl.includes("wss://")) {
+      console.log("\u{1F4CA} Using Neon serverless database");
+      _pool = new NeonPool({ connectionString: dbUrl });
+      _db = drizzleNeon({ client: _pool, schema: schema_exports });
+    } else {
+      console.log("\u{1F4CA} Using PostgreSQL database");
+      _pool = new PgPool({ connectionString: dbUrl });
+      _db = drizzlePg({ client: _pool, schema: schema_exports });
+    }
+  }
+}
+var pool = new Proxy({}, {
+  get(_target, prop) {
+    if (!_pool) initializeDb();
+    return _pool[prop];
+  }
+});
+var db = new Proxy({}, {
+  get(_target, prop) {
+    if (!_db) initializeDb();
+    return _db[prop];
+  }
+});
+
+// server/storage.ts
+import { eq, count, or, like, inArray, sql } from "drizzle-orm";
+var DatabaseStorage = class {
+  async getAllTeams() {
+    return await db.select().from(teams).orderBy(teams.createdAt);
+  }
+  async getTeam(id) {
+    const [team] = await db.select().from(teams).where(eq(teams.id, id));
+    return team || void 0;
+  }
+  async createTeam(insertTeam) {
+    const gameType = insertTeam.gameType;
+    const teamCount = await this.getTeamCountByGameType(gameType);
+    const maxTeams = gameType === "pubg" ? TOURNAMENT_CONFIG.PUBG.MAX_TEAMS : TOURNAMENT_CONFIG.FREE_FIRE.MAX_TEAMS;
+    if (teamCount >= maxTeams) {
+      throw new Error(`Tournament is full. All ${maxTeams} slots for ${gameType.toUpperCase()} have been filled.`);
+    }
+    const id = randomUUID();
+    const [team] = await db.insert(teams).values({
+      ...insertTeam,
+      id,
+      status: "pending"
+    }).returning();
+    return team;
+  }
+  async getTeamCount() {
+    const [result] = await db.select({ count: count() }).from(teams);
+    return result.count;
+  }
+  async getTeamCountByGameType(gameType) {
+    const [result] = await db.select({ count: count() }).from(teams).where(eq(teams.gameType, gameType));
+    return result.count;
+  }
+  async getTeamCountByStatus(status) {
+    if (status) {
+      const [result] = await db.select({ count: count() }).from(teams).where(eq(teams.status, status));
+      return result.count;
+    }
+    return this.getTeamCount();
+  }
+  async updateTeamStatus(id, status) {
+    const [team] = await db.update(teams).set({ status, updatedAt: sql`NOW()` }).where(eq(teams.id, id)).returning();
+    return team;
+  }
+  async updateTeamNotes(id, notes) {
+    const [team] = await db.update(teams).set({ adminNotes: notes, updatedAt: sql`NOW()` }).where(eq(teams.id, id)).returning();
+    return team;
+  }
+  async searchTeams(query, status) {
+    if (query && status) {
+      const searchPattern = `%${query}%`;
+      const conditions = or(
+        like(teams.teamName, searchPattern),
+        like(teams.leaderName, searchPattern),
+        like(teams.leaderWhatsapp, searchPattern),
+        like(teams.transactionId, searchPattern)
+      );
+      const results = await db.select().from(teams).where(
+        sql`${conditions} AND ${eq(teams.status, status)}`
+      ).orderBy(teams.createdAt);
+      return results;
+    }
+    if (query) {
+      const searchPattern = `%${query}%`;
+      const conditions = or(
+        like(teams.teamName, searchPattern),
+        like(teams.leaderName, searchPattern),
+        like(teams.leaderWhatsapp, searchPattern),
+        like(teams.transactionId, searchPattern)
+      );
+      return await db.select().from(teams).where(conditions).orderBy(teams.createdAt);
+    }
+    if (status) {
+      return await db.select().from(teams).where(eq(teams.status, status)).orderBy(teams.createdAt);
+    }
+    return this.getAllTeams();
+  }
+  async bulkUpdateStatus(ids, status) {
+    if (ids.length === 0) {
+      return [];
+    }
+    const updatedTeams = await db.update(teams).set({ status, updatedAt: sql`NOW()` }).where(inArray(teams.id, ids)).returning();
+    return updatedTeams;
+  }
+  async getAdminByUsername(username) {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
+    return admin || void 0;
+  }
+  async createAdmin(insertAdmin) {
+    const [admin] = await db.insert(adminUsers).values(insertAdmin).returning();
+    return admin;
+  }
+};
+var storage = new DatabaseStorage();
+
+// server/routes.ts
+import bcrypt from "bcryptjs";
+import ExcelJS from "exceljs";
+import path from "path";
+import fs from "fs";
+function requireAuth(req, res, next) {
+  if (!req.session.adminId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+}
+async function registerRoutes(app2) {
+  app2.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const admin = await storage.getAdminByUsername(username);
+      if (!admin) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      const isValid = await bcrypt.compare(password, admin.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      req.session.adminId = admin.id;
+      req.session.username = admin.username;
+      res.json({ message: "Login successful", username: admin.username });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.post("/api/admin/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logout successful" });
+    });
+  });
+  app2.get("/api/admin/me", (req, res) => {
+    if (!req.session.adminId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json({ username: req.session.username });
+  });
+  app2.get("/api/teams", async (_req, res) => {
+    try {
+      const teams2 = await storage.getAllTeams();
+      res.json(teams2);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.get("/api/teams/count", async (_req, res) => {
+    try {
+      const count2 = await storage.getTeamCount();
+      res.json({ count: count2 });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.get("/api/teams/count/:gameType", async (req, res) => {
+    try {
+      const { gameType } = req.params;
+      if (gameType !== "pubg" && gameType !== "freefire") {
+        return res.status(400).json({ message: "Invalid game type" });
+      }
+      const count2 = await storage.getTeamCountByGameType(gameType);
+      res.json({ count: count2 });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.post("/api/teams", async (req, res) => {
+    try {
+      const validatedData = insertTeamSchema.parse(req.body);
+      const team = await storage.createTeam(validatedData);
+      res.status(201).json(team);
+    } catch (error) {
+      if (error.name === "ZodError") {
+        res.status(400).json({
+          message: "Validation failed",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: error.message });
+      }
+    }
+  });
+  app2.get("/api/teams/:id", async (req, res) => {
+    try {
+      const team = await storage.getTeam(req.params.id);
+      if (!team) {
+        res.status(404).json({ message: "Team not found" });
+        return;
+      }
+      res.json(team);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.get("/api/teams/search", async (req, res) => {
+    try {
+      const { query, status } = req.query;
+      if (!query && !status) {
+        const teams3 = await storage.getAllTeams();
+        res.json(teams3);
+        return;
+      }
+      const teams2 = await storage.searchTeams(
+        query || "",
+        status
+      );
+      res.json(teams2);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.get("/api/admin/stats", requireAuth, async (_req, res) => {
+    try {
+      const totalTeams = await storage.getTeamCount();
+      const pubgTeams = await storage.getTeamCountByGameType("pubg");
+      const freeFireTeams = await storage.getTeamCountByGameType("freefire");
+      const pendingTeams = await storage.getTeamCountByStatus("pending");
+      const approvedTeams = await storage.getTeamCountByStatus("approved");
+      const rejectedTeams = await storage.getTeamCountByStatus("rejected");
+      res.json({
+        total: totalTeams,
+        pubgTeams,
+        freeFireTeams,
+        pending: pendingTeams,
+        approved: approvedTeams,
+        rejected: rejectedTeams,
+        pubgAvailable: TOURNAMENT_CONFIG.PUBG.MAX_TEAMS - pubgTeams,
+        freeFireAvailable: TOURNAMENT_CONFIG.FREE_FIRE.MAX_TEAMS - freeFireTeams
+      });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.patch("/api/admin/teams/:id/status", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      const validStatuses = ["pending", "approved", "rejected"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      const team = await storage.updateTeamStatus(req.params.id, status);
+      res.json(team);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.patch("/api/admin/teams/:id/notes", requireAuth, async (req, res) => {
+    try {
+      const { notes } = req.body;
+      const team = await storage.updateTeamNotes(req.params.id, notes);
+      res.json(team);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.post("/api/admin/teams/bulk-status", requireAuth, async (req, res) => {
+    try {
+      const { ids, status } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Invalid team IDs" });
+      }
+      const validStatuses = ["pending", "approved", "rejected"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      const teams2 = await storage.bulkUpdateStatus(ids, status);
+      res.json(teams2);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  app2.get("/api/admin/teams/export", requireAuth, async (req, res) => {
+    try {
+      const { gameType } = req.query;
+      const teams2 = await storage.getAllTeams();
+      const filteredTeams = gameType && (gameType === "pubg" || gameType === "freefire") ? teams2.filter((team) => team.gameType === gameType) : teams2;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Teams");
+      worksheet.columns = [
+        { header: "Game Type", key: "gameType", width: 15 },
+        { header: "Team Name", key: "teamName", width: 20 },
+        { header: "Leader Name", key: "leaderName", width: 20 },
+        { header: "Leader WhatsApp", key: "leaderWhatsapp", width: 15 },
+        { header: "Leader Player ID", key: "leaderPlayerId", width: 20 },
+        { header: "Player 2 Name", key: "player2Name", width: 20 },
+        { header: "Player 2 Player ID", key: "player2PlayerId", width: 20 },
+        { header: "Player 3 Name", key: "player3Name", width: 20 },
+        { header: "Player 3 Player ID", key: "player3PlayerId", width: 20 },
+        { header: "Player 4 Name", key: "player4Name", width: 20 },
+        { header: "Player 4 Player ID", key: "player4PlayerId", width: 20 },
+        { header: "YouTube Live Vote", key: "youtubeVote", width: 15 },
+        { header: "Transaction ID", key: "transactionId", width: 25 },
+        { header: "Payment Screenshot", key: "paymentScreenshot", width: 50 },
+        { header: "Status", key: "status", width: 15 },
+        { header: "Admin Notes", key: "adminNotes", width: 30 },
+        { header: "Registration Date", key: "createdAt", width: 20 }
+      ];
+      filteredTeams.forEach((team) => {
+        worksheet.addRow({
+          ...team,
+          createdAt: new Date(team.createdAt).toLocaleString(),
+          adminNotes: team.adminNotes || ""
+        });
+      });
+      worksheet.getRow(1).font = { bold: true };
+      const baseExportsDir = path.join(process.cwd(), "exports");
+      const gameFolder = gameType === "pubg" ? "pubg" : gameType === "freefire" ? "freefire" : "all";
+      const exportsDir = path.join(baseExportsDir, gameFolder);
+      if (!fs.existsSync(exportsDir)) {
+        fs.mkdirSync(exportsDir, { recursive: true });
+      }
+      const gameName = gameType === "pubg" ? "PUBG" : gameType === "freefire" ? "FreeFire" : "All";
+      const filename = `${gameName}-teams-${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}-${Date.now()}.xlsx`;
+      const filepath = path.join(exportsDir, filename);
+      await workbook.xlsx.writeFile(filepath);
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=${filename}`
+      );
+      const fileBuffer = await workbook.xlsx.writeBuffer();
+      res.send(fileBuffer);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  const httpServer = createServer(app2);
+  return httpServer;
+}
+
+// server/vite.ts
+import express from "express";
+import fs2 from "fs";
+import path3 from "path";
+import { createServer as createViteServer, createLogger } from "vite";
+
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path2 from "path";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+var vite_config_default = defineConfig({
+  plugins: [
+    react(),
+    runtimeErrorOverlay(),
+    ...process.env.NODE_ENV !== "production" && process.env.REPL_ID !== void 0 ? [
+      await import("@replit/vite-plugin-cartographer").then(
+        (m) => m.cartographer()
+      ),
+      await import("@replit/vite-plugin-dev-banner").then(
+        (m) => m.devBanner()
+      )
+    ] : []
+  ],
+  resolve: {
+    alias: {
+      "@": path2.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path2.resolve(import.meta.dirname, "shared"),
+      "@assets": path2.resolve(import.meta.dirname, "attached_assets")
+    }
+  },
+  root: path2.resolve(import.meta.dirname, "client"),
+  build: {
+    outDir: path2.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true
+  },
+  server: {
+    fs: {
+      strict: true,
+      deny: ["**/.*"]
+    }
+  }
+});
+
+// server/vite.ts
+import { nanoid } from "nanoid";
+var viteLogger = createLogger();
+function log(message, source = "express") {
+  const formattedTime = (/* @__PURE__ */ new Date()).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+async function setupVite(app2, server) {
+  const serverOptions = {
+    middlewareMode: true,
+    hmr: { server },
+    allowedHosts: true
+  };
+  const vite = await createViteServer({
+    ...vite_config_default,
+    configFile: false,
+    customLogger: {
+      ...viteLogger,
+      error: (msg, options) => {
+        viteLogger.error(msg, options);
+        process.exit(1);
+      }
+    },
+    server: serverOptions,
+    appType: "custom"
+  });
+  app2.use(vite.middlewares);
+  app2.use("*", async (req, res, next) => {
+    const url = req.originalUrl;
+    try {
+      const clientTemplate = path3.resolve(
+        import.meta.dirname,
+        "..",
+        "client",
+        "index.html"
+      );
+      let template = await fs2.promises.readFile(clientTemplate, "utf-8");
+      template = template.replace(
+        `src="/src/main.tsx"`,
+        `src="/src/main.tsx?v=${nanoid()}"`
+      );
+      const page = await vite.transformIndexHtml(url, template);
+      res.status(200).set({ "Content-Type": "text/html" }).end(page);
+    } catch (e) {
+      vite.ssrFixStacktrace(e);
+      next(e);
+    }
+  });
+}
+function serveStatic(app2) {
+  const distPath = path3.resolve(import.meta.dirname, "public");
+  if (!fs2.existsSync(distPath)) {
+    throw new Error(
+      `Could not find the build directory: ${distPath}, make sure to build the client first`
+    );
+  }
+  app2.use(express.static(distPath));
+  app2.use("*", (_req, res) => {
+    res.sendFile(path3.resolve(distPath, "index.html"));
+  });
+}
+
+// server/ensure-db.ts
+import { execSync, exec } from "child_process";
+import fs3 from "fs";
+import path4 from "path";
+import { promisify } from "util";
+var execAsync = promisify(exec);
+var POSTGRES_DIR = path4.join(process.env.HOME || "/home/runner", ".postgresql", "data");
+var SOCKET_DIR = "/tmp";
+var PORT = "5433";
+var LOG_FILE = path4.join(POSTGRES_DIR, "logfile");
+async function isPostgresRunning() {
+  try {
+    await execAsync(`pg_isready -h ${SOCKET_DIR} -p ${PORT}`, { timeout: 5e3 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function ensureDatabase() {
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== "") {
+    console.log("\u2705 DATABASE_URL is set, using existing database");
+    return;
+  }
+  console.log("\u26A0\uFE0F  DATABASE_URL not set. Setting up local PostgreSQL...");
+  try {
+    const needsInit = !fs3.existsSync(path4.join(POSTGRES_DIR, "PG_VERSION"));
+    if (needsInit) {
+      console.log("\u{1F4CA} Initializing PostgreSQL data directory...");
+      if (fs3.existsSync(POSTGRES_DIR)) {
+        console.log("\u{1F5D1}\uFE0F  Cleaning up corrupted PostgreSQL directory...");
+        fs3.rmSync(POSTGRES_DIR, { recursive: true, force: true });
+      }
+      fs3.mkdirSync(POSTGRES_DIR, { recursive: true });
+      try {
+        const cleanEnv = { ...process.env };
+        delete cleanEnv.PGPORT;
+        delete cleanEnv.PGHOST;
+        delete cleanEnv.PGUSER;
+        delete cleanEnv.PGPASSWORD;
+        delete cleanEnv.PGDATABASE;
+        execSync(`initdb -D ${POSTGRES_DIR} --auth=trust --no-locale --encoding=UTF8`, {
+          stdio: "pipe",
+          env: cleanEnv
+        });
+        console.log("\u2705 PostgreSQL initialized");
+      } catch (error) {
+        console.error("\u274C Failed to initialize PostgreSQL:", error.message);
+        throw error;
+      }
+    } else {
+      console.log("\u2139\uFE0F  PostgreSQL data directory already exists");
+    }
+    const isRunning = await isPostgresRunning();
+    if (!isRunning) {
+      console.log("\u{1F680} Starting PostgreSQL server...");
+      try {
+        const cleanEnv = { ...process.env };
+        delete cleanEnv.PGPORT;
+        delete cleanEnv.PGHOST;
+        delete cleanEnv.PGUSER;
+        delete cleanEnv.PGPASSWORD;
+        delete cleanEnv.PGDATABASE;
+        execSync(
+          `pg_ctl -D ${POSTGRES_DIR} -o "-p ${PORT} -k ${SOCKET_DIR}" -l ${LOG_FILE} start`,
+          { stdio: "pipe", timeout: 15e3, env: cleanEnv }
+        );
+        console.log("\u23F3 Waiting for PostgreSQL to be ready...");
+        for (let i = 0; i < 10; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 1e3));
+          if (await isPostgresRunning()) {
+            console.log("\u2705 PostgreSQL is ready");
+            break;
+          }
+        }
+        const finalCheck = await isPostgresRunning();
+        if (!finalCheck) {
+          if (fs3.existsSync(LOG_FILE)) {
+            const logs = fs3.readFileSync(LOG_FILE, "utf-8");
+            console.error("PostgreSQL logs:", logs.slice(-500));
+          }
+          throw new Error("PostgreSQL started but is not responding");
+        }
+      } catch (error) {
+        console.error("\u274C Failed to start PostgreSQL:", error.message);
+        throw error;
+      }
+    } else {
+      console.log("\u2705 PostgreSQL is already running");
+    }
+    try {
+      execSync(`createdb -h ${SOCKET_DIR} -p ${PORT} replit_db 2>&1`, {
+        stdio: "pipe"
+      });
+      console.log("\u2705 Database 'replit_db' created");
+    } catch (error) {
+      if (!error.message.includes("already exists")) {
+        console.log("\u2139\uFE0F  Database 'replit_db' might already exist");
+      }
+    }
+    const localDatabaseUrl = `postgresql://runner@localhost:${PORT}/replit_db?host=${SOCKET_DIR}`;
+    process.env.DATABASE_URL = localDatabaseUrl;
+    console.log("\u2705 DATABASE_URL set to local PostgreSQL");
+  } catch (error) {
+    console.error("\u274C Failed to setup local database:", error.message);
+    throw new Error(`Database setup failed: ${error.message}`);
+  }
+}
+
+// server/init-db.ts
+import { sql as sql2 } from "drizzle-orm";
+import bcrypt2 from "bcryptjs";
+async function initializeDatabase() {
+  try {
+    console.log("\u{1F527} Initializing database...");
+    console.log("\u{1F4CA} Creating admin_users table...");
+    await db.execute(sql2`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    console.log("\u{1F4CA} Creating teams table...");
+    await db.execute(sql2`
+      CREATE TABLE IF NOT EXISTS teams (
+        id VARCHAR PRIMARY KEY,
+        team_name TEXT NOT NULL,
+        leader_name TEXT NOT NULL,
+        leader_whatsapp TEXT NOT NULL,
+        leader_player_id TEXT NOT NULL,
+        player2_name TEXT NOT NULL,
+        player2_player_id TEXT NOT NULL,
+        player3_name TEXT NOT NULL,
+        player3_player_id TEXT NOT NULL,
+        player4_name TEXT NOT NULL,
+        player4_player_id TEXT NOT NULL,
+        transaction_id TEXT NOT NULL,
+        payment_screenshot TEXT NOT NULL,
+        game_type TEXT NOT NULL DEFAULT 'pubg',
+        youtube_vote INTEGER NOT NULL DEFAULT 0,
+        agreed_to_terms INTEGER NOT NULL DEFAULT 1,
+        status TEXT NOT NULL DEFAULT 'pending',
+        admin_notes TEXT,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    console.log("\u{1F4CA} Migrating existing teams table...");
+    try {
+      await db.execute(sql2`ALTER TABLE teams ADD COLUMN IF NOT EXISTS game_type TEXT NOT NULL DEFAULT 'pubg'`);
+      await db.execute(sql2`ALTER TABLE teams ADD COLUMN IF NOT EXISTS youtube_vote INTEGER NOT NULL DEFAULT 0`);
+      const columnsResult = await db.execute(sql2`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'teams' AND column_name LIKE '%pubg_id'
+      `);
+      if (columnsResult.rows.length > 0) {
+        console.log("\u{1F4CA} Renaming pubg_id columns to player_id...");
+        await db.execute(sql2`ALTER TABLE teams RENAME COLUMN leader_pubg_id TO leader_player_id`);
+        await db.execute(sql2`ALTER TABLE teams RENAME COLUMN player2_pubg_id TO player2_player_id`);
+        await db.execute(sql2`ALTER TABLE teams RENAME COLUMN player3_pubg_id TO player3_player_id`);
+        await db.execute(sql2`ALTER TABLE teams RENAME COLUMN player4_pubg_id TO player4_player_id`);
+        console.log("\u2705 Columns renamed successfully!");
+      }
+    } catch (error) {
+      if (!error.message.includes("already exists") && !error.message.includes("does not exist")) {
+        console.error("\u26A0\uFE0F  Migration warning:", error.message);
+      }
+    }
+    const existingAdminResult = await db.execute(sql2`SELECT COUNT(*) as count FROM admin_users`);
+    const adminCount = Number(existingAdminResult.rows[0]?.count || 0);
+    if (adminCount === 0) {
+      console.log("\u{1F464} Creating default admin user...");
+      const hashedPassword = await bcrypt2.hash("admin123", 10);
+      await db.execute(sql2`
+        INSERT INTO admin_users (username, password)
+        VALUES ('admin', ${hashedPassword})
+      `);
+      console.log("\u2705 Default admin created!");
+      console.log("\u{1F4DD} Username: admin");
+      console.log("\u{1F4DD} Password: admin123");
+      console.log("\u26A0\uFE0F  IMPORTANT: Change this password after first login!");
+    } else {
+      console.log("\u2705 Admin user already exists");
+    }
+    console.log("\u2705 Database initialized successfully!");
+  } catch (error) {
+    console.error("\u274C Database initialization failed:", error);
+    throw error;
+  }
+}
+
+// server/index.ts
+var app = express2();
+app.use(express2.json());
+app.use(express2.urlencoded({ extended: false }));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1e3
+    }
+  })
+);
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path5 = req.path;
+  let capturedJsonResponse = void 0;
+  const originalResJson = res.json;
+  res.json = function(bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path5.startsWith("/api")) {
+      let logLine = `${req.method} ${path5} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "\u2026";
+      }
+      log(logLine);
+    }
+  });
+  next();
+});
+(async () => {
+  await ensureDatabase();
+  await initializeDatabase();
+  const server = await registerRoutes(app);
+  app.use((err, _req, res, _next) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    throw err;
+  });
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true
+  }, () => {
+    log(`serving on port ${port}`);
+  });
+})();
