@@ -59,7 +59,7 @@ export const insertTeamSchema = createInsertSchema(teams).omit({
   }),
   transactionId: z.string().min(5, "Transaction ID required"),
   paymentScreenshot: z.string().min(1, "Payment screenshot required"),
-  agreedToTerms: z.number().refine((val) => val === 1, {
+  agreedToTerms: z.union([z.literal(0), z.literal(1)]).refine((val) => val === 1, {
     message: "You must agree to terms and conditions",
   }),
 });

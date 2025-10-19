@@ -53,13 +53,15 @@ function FormSkeleton() {
   );
 }
 
+type FormValues = Omit<InsertTeam, 'agreedToTerms'> & { agreedToTerms: 0 | 1 };
+
 export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: GameRegistrationFormProps) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<InsertTeam>({
-    resolver: zodResolver(insertTeamSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(insertTeamSchema) as any,
     defaultValues: {
       gameType,
       teamName: "",
@@ -132,11 +134,11 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
     }
   };
 
-  const onSubmit = (data: InsertTeam) => {
-    const sanitizedData = {
+  const onSubmit = (data: FormValues) => {
+    const sanitizedData: InsertTeam = {
       ...data,
-      agreedToTerms: Number(data.agreedToTerms) === 1 ? 1 : 0,
-    };
+      agreedToTerms: data.agreedToTerms === 1 ? 1 : 0,
+    } as InsertTeam;
     registerMutation.mutate(sanitizedData);
   };
 
