@@ -1,131 +1,102 @@
-# PUBG Mobile Tournament Registration Website
+# Gaming Tournament Platform
 
-## Overview
-A professional, modern tournament registration platform for PUBG Mobile Squad Championships. Built with React, Express, and TanStack Query featuring a dark gaming-themed design with vibrant accents and smooth animations.
+A professional, modern, and fully responsive tournament registration platform for PUBG Mobile and Free Fire tournaments with real-time slot tracking, admin dashboard, and Excel export functionality.
 
-## Features Implemented
+## 🎮 Features
 
-### Core Functionality
-- **Tournament Registration**: Complete team registration form for 4-player squads
-- **Payment Verification**: Upload payment screenshots with transaction ID tracking
-- **Slot Management**: Real-time slot counter showing available spots (max 25 teams)
-- **Team Dashboard**: View all registered teams with leader information
-- **Countdown Timer**: Live countdown to tournament start date
+### User-Facing Features
 
-### User Interface
-- **Hero Section**: Eye-catching landing with tournament details and CTAs
-- **Tournament Details**: Game mode, map, platform, entry fee, and prize information
-- **Prize Pool Display**: Winner (₹1000) and Runner-up (₹400) prizes prominently shown
-- **Rules Section**: Comprehensive tournament rules and regulations
-- **Dark/Light Theme**: Theme toggle for user preference
-- **Responsive Design**: Fully responsive across mobile and desktop devices
-
-### Technical Features
-- **Form Validation**: Zod schema validation for all inputs
-- **Image Upload**: Base64 encoding for payment screenshots
-- **Real-time Updates**: TanStack Query for automatic data synchronization
-- **Error Handling**: Toast notifications for success/error states
-- **Type Safety**: Full TypeScript implementation with shared schemas
-
-## Architecture
-
-### Frontend (React + Vite)
-- **Components**: Modular tournament components (Hero, Details, PrizePool, Rules, Registration, Teams)
-- **State Management**: TanStack Query for server state
-- **Forms**: React Hook Form with Zod validation
-- **Styling**: Tailwind CSS with custom gaming theme
-- **Animations**: Framer Motion for smooth transitions
-
-### Backend (Express + TypeScript)
-- **API Routes**: RESTful endpoints for team management
-- **Storage**: In-memory storage with IStorage interface
-- **Validation**: Zod schema validation on server
-- **Error Handling**: Comprehensive error responses
-
-### Data Model
-```typescript
-Team {
-  id: string
-  teamName: string
-  leaderName: string
-  leaderWhatsapp: string (10 digits)
-  leaderPubgId: string
-  player2Name: string
-  player2PubgId: string
-  player3Name: string
-  player3PubgId: string
-  player4Name: string
-  player4PubgId: string
-  transactionId: string
-  paymentScreenshot: string (base64)
-  agreedToTerms: 1
-  createdAt: timestamp
-}
-```
-
-## Tournament Configuration
-- Entry Fee: ₹80 per team
-- Prize Pool: ₹1400 total
+#### PUBG Mobile Tournament
+- **Max Teams**: 25 Teams
+- **Entry Fee**: ₹80 per team
+- **Prize Pool**: 
   - Winner: ₹1000
   - Runner-up: ₹400
-- Max Teams: 25 slots
-- Game Mode: Squad (4 players)
-- Map: Erangel (Classic)
-- Platform: Mobile Only
+- **Game Mode**: Squad (4 Players)
+- **Map**: Erangel (Classic)
 
-## Design System
+#### Free Fire Tournament
+- **Max Teams**: 12 Teams
+- **Entry Fee**: ₹80 per team
+- **Prize Pool**:
+  - Winner: ₹500
+  - Runner-up: ₹260
+- **Game Mode**: Squad (4 Players)
+- **Map**: Bermuda / Purgatory / Kalahari
 
-### Colors
-- **Primary**: Orange-red (#FF6B35) - PUBG-inspired accent
-- **Secondary**: Electric cyan (#00D9FF) - Highlights
-- **Success**: Green - Confirmed registrations
-- **Warning**: Gold - Important notices
-- **Background**: Dark navy-black theme
-- **Text**: Three-level hierarchy (primary, secondary, tertiary)
+### Core Features
 
-### Typography
-- **Display Font**: Rajdhani (bold, gaming-inspired headings)
-- **Body Font**: Inter (clean, professional body text)
-- **Weights**: 400 (regular), 600 (semibold), 700 (bold)
+1. **Dual Tournament System**
+   - Separate pages for PUBG and Free Fire
+   - Independent team registration and slot tracking
+   - Different tournament configurations
 
-### Animations
-- Fade-in on page load (0.6s)
-- Slide-up scroll reveals (0.4s)
-- Card hover lift effects (0.2s)
-- Button scale interactions
-- Countdown number flip animation
-- Pulse effect for slot counter when almost full
+2. **Real-Time Slot Tracking**
+   - Live updates every 5 seconds
+   - Visual progress bar showing filled slots
+   - Automatic alerts when slots are almost full
+   - Prevents over-registration
 
-## API Endpoints
+3. **Professional Registration Form**
+   - Team information (name, leader details)
+   - 4 player details with IDs
+   - Payment screenshot upload (Base64)
+   - Transaction ID validation
+   - YouTube live streaming vote (Yes/No)
+   - Terms and conditions agreement
+   - Real-time form validation
 
-### GET /api/teams
-Returns all registered teams sorted by registration time
-```json
-Response: Team[]
-```
+4. **Modern UI/UX**
+   - Responsive design for all devices
+   - Animated hero sections with gaming aesthetics
+   - Framer Motion animations
+   - Professional color scheme (Orange/Gaming theme)
+   - Custom fonts (Rajdhani for display, Inter for body)
+   - Glassmorphism effects
+   - Hover animations and transitions
 
-### POST /api/teams
-Register a new team (enforces 25-team limit)
-```json
-Request Body: InsertTeam
-Response: Team (201 Created)
-Error: 400 Bad Request | 500 Server Error
-```
+5. **Admin Dashboard**
+   - Secure login system
+   - Real-time statistics for both tournaments
+   - Team management (approve/reject/pending)
+   - Bulk operations
+   - Search and filter functionality
+   - Admin notes for each team
+   - Payment screenshot verification
 
-### GET /api/teams/count
-Get current team count
-```json
-Response: { count: number }
-```
+6. **Excel Export System**
+   - Separate exports for PUBG teams
+   - Separate exports for Free Fire teams
+   - Combined export for all teams
+   - Automatic file saving to exports folder structure:
+     - `exports/pubg/` - PUBG team data
+     - `exports/freefire/` - Free Fire team data
+     - `exports/all/` - Combined data
+   - Includes all team details, payment info, and YouTube votes
 
-### GET /api/teams/:id
-Get specific team by ID
-```json
-Response: Team
-Error: 404 Not Found
-```
+### Technical Features
 
-## Project Structure
+1. **Database (PostgreSQL)**
+   - Persistent data storage
+   - Two main tables: `admin_users`, `teams`
+   - Real-time data synchronization
+   - Drizzle ORM for type-safety
+
+2. **Security**
+   - Password hashing with bcrypt
+   - Session-based authentication
+   - Admin-only routes protection
+   - Input validation with Zod
+   - CSRF protection
+
+3. **Performance**
+   - React Query for data caching
+   - Optimized re-renders
+   - Lazy loading
+   - 5-second polling for real-time updates
+
+## 🏗️ Project Structure
+
 ```
 client/
 ├── src/
@@ -138,60 +109,269 @@ client/
 │   │   │   ├── prize-pool.tsx
 │   │   │   ├── tournament-rules.tsx
 │   │   │   ├── registered-teams.tsx
-│   │   │   ├── registration-form.tsx
+│   │   │   ├── game-registration-form.tsx
 │   │   │   └── footer.tsx
 │   │   ├── ui/ (shadcn components)
+│   │   ├── navbar.tsx
 │   │   └── theme-toggle.tsx
 │   ├── pages/
-│   │   ├── home.tsx
+│   │   ├── pubg-tournament.tsx
+│   │   ├── free-fire-tournament.tsx
+│   │   ├── admin-login.tsx
+│   │   ├── admin-dashboard.tsx
 │   │   └── not-found.tsx
+│   ├── lib/
+│   │   ├── queryClient.ts
+│   │   └── utils.ts
 │   └── App.tsx
 server/
 ├── routes.ts (API endpoints)
-├── storage.ts (Data layer)
-└── index.ts
+├── storage.ts (Database operations)
+├── db.ts (Database connection)
+├── init-db.ts (Database initialization)
+└── index.ts (Express server)
 shared/
 └── schema.ts (TypeScript types & Zod schemas)
+exports/
+├── pubg/ (PUBG team Excel files)
+├── freefire/ (Free Fire team Excel files)
+└── all/ (Combined Excel files)
 ```
 
-## Running the Application
-The application runs automatically via the "Start application" workflow which executes:
-```bash
-npm run dev
+## 🔐 Admin Access
+
+**Default Credentials** (Change after first login):
+- Username: `admin`
+- Password: `admin123`
+
+Access admin panel: Click the small "Admin" button in the footer or navigate to `/admin/login`
+
+## 🎨 Design Guidelines
+
+### Color Scheme
+- Primary: Orange (#FF6B1A) - Gaming/Action theme
+- Chart colors for different sections
+- Professional dark/light mode support
+
+### Typography
+- Display Font: Rajdhani (Bold, Gaming aesthetic)
+- Body Font: Inter (Clean, Modern)
+- Headings use display font
+- Body text uses sans font
+
+### Animations
+- Hero section gradient orbs
+- Card hover effects with scale
+- Framer Motion page transitions
+- Pulse effects for urgent elements
+- Smooth scrolling
+
+## 📝 Key Features Implementation
+
+### YouTube Live Streaming Vote
+Every registration form includes a voting option:
+- "Do you want to watch the match live on YouTube?"
+- Options: Yes / No
+- Stored in database for analysis
+- Admin can see vote counts
+
+### Real-Time Slot Management
+- Automatically refreshes every 5 seconds
+- Shows: X/Y teams registered
+- Progress bar visualization
+- Prevents over-booking
+- Different limits for PUBG (25) and Free Fire (12)
+
+### Payment Verification
+- QR code displayed in registration form
+- Screenshot upload required
+- Transaction ID required
+- Admin can view payment screenshots
+- Approve/reject based on payment verification
+
+### Team Status Management
+- **Pending**: Newly registered, awaiting approval
+- **Approved**: Payment verified, team confirmed
+- **Rejected**: Payment issues or rule violations
+
+## 🚀 Running the Application
+
+The workflow "Start application" runs `npm run dev` which:
+1. Starts PostgreSQL database
+2. Initializes tables if needed
+3. Creates default admin user
+4. Starts Express server (backend)
+5. Starts Vite server (frontend)
+6. Serves on port 5000
+
+## 📊 Database Schema
+
+### Teams Table
+```typescript
+{
+  id: string (UUID)
+  gameType: "pubg" | "freefire"
+  teamName: string
+  leaderName: string
+  leaderWhatsapp: string (10 digits)
+  leaderPlayerId: string
+  player2Name: string
+  player2PlayerId: string
+  player3Name: string
+  player3PlayerId: string
+  player4Name: string
+  player4PlayerId: string
+  youtubeVote: "yes" | "no"
+  transactionId: string
+  paymentScreenshot: string (Base64)
+  agreedToTerms: 1
+  status: "pending" | "approved" | "rejected"
+  adminNotes: string (optional)
+  createdAt: timestamp
+  updatedAt: timestamp
+}
 ```
-This starts both the Express backend and Vite frontend on port 5000.
 
-## Recent Changes (October 15, 2025)
-- ✅ Implemented complete tournament registration system
-- ✅ Built all frontend components with gaming-inspired design
-- ✅ Created backend API with slot management
-- ✅ Added payment screenshot upload functionality
-- ✅ Implemented real-time slot counter
-- ✅ Added dark/light theme toggle
-- ✅ Comprehensive E2E testing completed
-- ✅ Mobile responsive design verified
+### Admin Users Table
+```typescript
+{
+  id: number (serial)
+  username: string (unique)
+  password: string (bcrypt hashed)
+  createdAt: timestamp
+}
+```
 
-## Testing
-All core features have been tested end-to-end including:
-- Team registration flow with all 4 players
-- Payment screenshot upload and preview
-- Slot counter real-time updates
-- Multi-team registration (tested up to 3 teams)
+## 🎯 User Flow
+
+### Team Registration
+1. Visit `/pubg` or `/free-fire`
+2. View tournament details, rules, prize pool
+3. Check available slots
+4. Click "Register Your Squad"
+5. Fill team and player information
+6. Make payment via QR code
+7. Upload payment screenshot
+8. Vote for YouTube live streaming
+9. Agree to terms
+10. Submit registration
+11. Wait for admin approval
+
+### Admin Workflow
+1. Login at `/admin/login`
+2. View dashboard with real-time stats
+3. See all pending registrations
+4. View payment screenshots
+5. Approve or reject teams
+6. Add admin notes if needed
+7. Export data to Excel
+8. Monitor both tournaments separately
+
+## 🔒 Security Features
+
+- Bcrypt password hashing
+- Session-based authentication
+- Protected admin routes
+- Input validation (Zod)
+- SQL injection prevention (Drizzle ORM)
+- XSS protection
+- Payment screenshot verification
+
+## 📱 Responsive Design
+
+- Mobile-first approach
+- Breakpoints:
+  - Mobile: < 768px
+  - Tablet: 768px - 1024px
+  - Desktop: > 1024px
+- Touch-friendly buttons
+- Optimized images
+- Smooth scrolling
+
+## 🎨 Professional Features
+
+- Custom gradient text effects
+- Glassmorphism cards
+- Animated background orbs
+- Smooth page transitions
+- Hover scale effects
+- Loading states
+- Error handling
 - Toast notifications
-- Mobile responsive layout (375px viewport)
-- Theme toggle functionality
+- Skeleton loaders
 
-## Future Enhancements
-- Admin panel for payment verification
-- Email/WhatsApp notifications
-- Automated room ID distribution
-- Team editing before tournament
-- Prize distribution tracking
-- Analytics dashboard
+## 📦 Technologies Used
 
-## User Preferences
-- Prefer dark gaming theme by default
-- Vibrant accent colors (orange/cyan) for gaming aesthetic
-- Professional typography with clear hierarchy
-- Smooth, subtle animations (no excessive motion)
-- Mobile-first responsive design
+**Frontend:**
+- React 18
+- TypeScript
+- TanStack Query (React Query)
+- Wouter (Routing)
+- Tailwind CSS
+- shadcn/ui Components
+- Framer Motion
+- Lucide Icons
+
+**Backend:**
+- Express.js
+- TypeScript
+- PostgreSQL
+- Drizzle ORM
+- Bcrypt
+- ExcelJS
+- Express Session
+
+**Development:**
+- Vite
+- Drizzle Kit
+- TSX
+
+## 🎯 Future Enhancements (Optional)
+
+- [ ] Email notifications
+- [ ] SMS notifications via Twilio
+- [ ] WhatsApp integration
+- [ ] Live match updates
+- [ ] Tournament brackets
+- [ ] Player statistics
+- [ ] Multiple tournaments support
+- [ ] Team profile pages
+- [ ] Leaderboards
+
+## 📋 Testing Checklist
+
+✅ PUBG page loads correctly
+✅ Free Fire page loads correctly
+✅ Navigation works
+✅ Slot counter updates in real-time
+✅ Registration form validates correctly
+✅ Payment screenshot upload works
+✅ YouTube vote saves correctly
+✅ Admin login works
+✅ Admin dashboard shows correct stats
+✅ Team approval/rejection works
+✅ Excel export works (PUBG/Free Fire/All)
+✅ Excel files save to correct folders
+✅ Search and filter work
+✅ Bulk operations work
+✅ Responsive on all devices
+✅ No console errors
+✅ No LSP errors
+✅ Database persists data correctly
+
+## 🎮 Tournament Rules Implemented
+
+- Squad mode (4 players per team)
+- Mobile-only platform
+- Fair play policy
+- No refunds
+- Punctuality requirements
+- Code of conduct
+- Streaming allowed
+- Disconnect policy
+- Prize distribution via UPI
+
+---
+
+**Built with ❤️ for Gaming Community**
+**Last Updated**: October 19, 2025

@@ -13,7 +13,7 @@ export function CountdownTimer() {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = new Date(TOURNAMENT_CONFIG.TOURNAMENT_DATE).getTime() - new Date().getTime();
+      const difference = new Date(TOURNAMENT_CONFIG.PUBG.TOURNAMENT_DATE).getTime() - new Date().getTime();
       
       if (difference > 0) {
         setTimeLeft({
