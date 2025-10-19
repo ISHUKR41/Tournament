@@ -31,9 +31,9 @@ export default function FreeFireTournament() {
         </div>
 
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-red-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-yellow-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-chart-1/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-destructive/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-chart-2/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-24 text-center">
@@ -47,18 +47,18 @@ export default function FreeFireTournament() {
           </Badge>
 
           <motion.h1 
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-extrabold mb-8 leading-tight"
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold mb-8 leading-tight"
             data-testid="text-hero-title"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             style={{
-              textShadow: '0 0 40px rgba(255, 100, 0, 0.5), 0 0 80px rgba(255, 50, 0, 0.3)',
+              textShadow: '0 0 20px rgba(255, 100, 0, 0.3), 0 0 40px rgba(255, 50, 0, 0.15)',
             }}
           >
             Ultimate Free Fire
-            <span className="block gradient-text mt-3 text-6xl sm:text-7xl md:text-8xl lg:text-9xl" style={{
-              background: 'linear-gradient(135deg, #ff6b00 0%, #ff0000 50%, #ff6b00 100%)',
+            <span className="block gradient-text mt-3 text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold" style={{
+              background: 'linear-gradient(135deg, hsl(var(--chart-1)) 0%, hsl(var(--destructive)) 50%, hsl(var(--chart-1)) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundSize: '200% 200%',
@@ -67,7 +67,7 @@ export default function FreeFireTournament() {
           </motion.h1>
 
           <motion.p 
-            className="text-xl md:text-2xl text-foreground/90 mb-10 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100 font-medium leading-relaxed"
+            className="text-lg md:text-xl text-foreground/80 mb-10 max-w-3xl mx-auto font-normal leading-relaxed"
             data-testid="text-hero-subtitle"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -85,22 +85,22 @@ export default function FreeFireTournament() {
           >
             <Button 
               size="lg" 
-              className="text-xl px-10 py-7 min-h-14 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              className="text-lg shadow-lg"
               onClick={() => setShowRegistrationForm(true)}
               data-testid="button-register-now"
             >
-              <Users className="w-6 h-6 mr-2" />
+              <Users className="w-5 h-5 mr-2" />
               Register Your Squad
             </Button>
             
             <Button 
               size="lg" 
               variant="outline" 
-              className="text-xl px-10 py-7 min-h-14 backdrop-blur-md bg-background/30 border-2 border-foreground/20 hover:bg-background/40 shadow-xl hover:shadow-2xl transition-all duration-300"
+              className="text-lg backdrop-blur-md bg-background/30"
               onClick={() => document.getElementById('rules')?.scrollIntoView({ behavior: 'smooth' })}
               data-testid="button-view-rules"
             >
-              <Calendar className="w-6 h-6 mr-2" />
+              <Calendar className="w-5 h-5 mr-2" />
               View Rules
             </Button>
           </motion.div>
