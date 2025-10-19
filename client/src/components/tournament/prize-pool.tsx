@@ -11,38 +11,39 @@ interface PrizePoolProps {
 
 export function PrizePool({ config }: PrizePoolProps) {
   return (
-    <section className="relative py-20 md:py-32 overflow-hidden">
+    <section className="relative py-12 sm:py-16 md:py-20 lg:py-32 overflow-hidden" data-aos="fade-up">
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-chart-4/5 to-chart-2/5"></div>
       <div className="absolute inset-0 bg-secondary/40 backdrop-blur-3xl"></div>
       
-      {/* Floating Orbs */}
+      {/* Floating Orbs - Responsive */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-20 w-64 h-64 bg-chart-4/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-5 sm:top-10 left-5 sm:left-20 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-chart-4/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 sm:bottom-20 right-5 sm:right-20 w-40 h-40 sm:w-56 sm:h-56 md:w-72 md:h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div 
-          className="text-center mb-16"
+          className="text-center mb-10 sm:mb-12 md:mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
+          data-aos="fade-down"
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="w-6 h-6 text-chart-4 animate-pulse" />
-            <h2 className="text-4xl md:text-6xl font-display font-extrabold" data-testid="text-section-prize-pool">
+          <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-chart-4 animate-pulse" />
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-extrabold" data-testid="text-section-prize-pool">
               Prize Pool
             </h2>
-            <Sparkles className="w-6 h-6 text-chart-4 animate-pulse" />
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-chart-4 animate-pulse" />
           </div>
-          <p className="text-foreground/80 text-xl font-medium">
+          <p className="text-foreground/80 text-base sm:text-lg md:text-xl font-medium px-4">
             Compete for amazing cash prizes!
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto px-4">
           {/* Winner */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}

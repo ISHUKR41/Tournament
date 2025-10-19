@@ -107,24 +107,32 @@ export function TournamentRules({ gameType }: TournamentRulesProps) {
   };
 
   return (
-    <section id="rules" className="py-20 md:py-28 container mx-auto px-4">
+    <section id="rules" className="py-12 sm:py-16 md:py-20 lg:py-28 container mx-auto px-4 sm:px-6">
       <motion.div 
-        className="text-center mb-16"
+        className="text-center mb-10 sm:mb-12 md:mb-16"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.6 }}
+        data-aos="fade-up"
       >
-        <h2 className="text-4xl md:text-5xl font-display font-extrabold mb-5" data-testid="text-section-rules">
+        <h2 
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-extrabold mb-4 sm:mb-5" 
+          style={{ fontSize: 'clamp(1.875rem, 5vw, 3.75rem)' }}
+          data-testid="text-section-rules"
+        >
           Rules & Regulations
         </h2>
-        <p className="text-foreground/80 text-xl max-w-3xl mx-auto font-medium">
+        <p 
+          className="text-foreground/80 text-base sm:text-lg md:text-xl max-w-3xl mx-auto font-medium"
+          style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+        >
           Please read all rules carefully before registering. Organizers' decisions are final.
         </p>
       </motion.div>
 
       <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
@@ -134,30 +142,38 @@ export function TournamentRules({ gameType }: TournamentRulesProps) {
           <motion.div
             key={index}
             variants={itemVariants}
+            data-aos="fade-right"
+            data-aos-delay={index * 50}
           >
             <Card 
-              className={`p-7 hover-elevate transition-all duration-300 hover:scale-[1.02] ${
-                rule.variant === 'destructive' ? 'border-destructive/40 hover:border-destructive/60' : 'hover:border-primary/30'
-              }`}
+              className={`p-5 sm:p-6 md:p-7 hover-elevate transition-all duration-500 hover:scale-[1.02] group min-h-[140px] sm:min-h-[160px] ${
+                rule.variant === 'destructive' ? 'border-destructive/40 hover:border-destructive/60 hover:shadow-destructive/20' : 'hover:border-primary/30 hover:shadow-primary/10'
+              } hover:shadow-xl`}
               data-testid={`card-rule-${index}`}
             >
-              <div className="flex items-start gap-5">
-                <div className={`p-3 rounded-xl flex-shrink-0 transition-transform duration-300 hover:scale-110 ${
+              <div className="flex items-start gap-4 sm:gap-5">
+                <div className={`p-3 sm:p-4 rounded-xl flex-shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 min-w-[52px] min-h-[52px] sm:min-w-[56px] sm:min-h-[56px] flex items-center justify-center ${
                   rule.variant === 'destructive' 
                     ? 'bg-destructive/15' 
                     : 'bg-primary/15'
                 }`}>
-                  <rule.icon className={`w-6 h-6 ${
+                  <rule.icon className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-500 group-hover:scale-110 ${
                     rule.variant === 'destructive' 
                       ? 'text-destructive' 
                       : 'text-primary'
                   }`} />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-display font-bold text-xl mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 
+                    className="font-display font-bold text-base sm:text-lg md:text-xl mb-2"
+                    style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}
+                  >
                     {rule.title}
                   </h3>
-                  <p className="text-base text-foreground/70 leading-relaxed">
+                  <p 
+                    className="text-sm sm:text-base text-foreground/70 leading-relaxed"
+                    style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1rem)' }}
+                  >
                     {rule.description}
                   </p>
                 </div>

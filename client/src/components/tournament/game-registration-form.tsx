@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { X, Upload, Loader2 } from "lucide-react";
+import { X, Upload, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Form,
   FormControl,
@@ -29,9 +30,32 @@ interface GameRegistrationFormProps {
   entryFee: number;
 }
 
+// Loading Skeleton Component
+function FormSkeleton() {
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <div className="space-y-3 sm:space-y-4">
+        <Skeleton className="h-5 w-32 sm:w-40" />
+        <Skeleton className="h-11 sm:h-12 w-full" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="space-y-3">
+          <Skeleton className="h-5 w-28 sm:w-36" />
+          <Skeleton className="h-11 sm:h-12 w-full" />
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-5 w-28 sm:w-36" />
+          <Skeleton className="h-11 sm:h-12 w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: GameRegistrationFormProps) {
   const { toast } = useToast();
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<InsertTeam>({
     resolver: zodResolver(insertTeamSchema),
@@ -81,11 +105,13 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsLoading(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
         setImagePreview(base64);
         form.setValue("paymentScreenshot", base64);
+        setIsLoading(false);
       };
       reader.readAsDataURL(file);
     }
@@ -98,58 +124,84 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
   const playerIdLabel = gameType === "pubg" ? "PUBG ID" : "Free Fire UID";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-        <div className="sticky top-0 z-10 bg-card border-b p-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-display font-bold" data-testid="text-form-title">
-              {gameName} Team Registration
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <Card 
+        className="w-full h-full sm:h-auto sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl max-h-screen sm:max-h-[95vh] md:max-h-[90vh] overflow-y-auto relative rounded-none sm:rounded-lg border-0 sm:border shadow-none sm:shadow-lg"
+        data-aos="zoom-in"
+        data-aos-duration="300"
+      >
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b p-4 sm:p-5 md:p-6 flex items-center justify-between">
+          <div className="flex-1 pr-4">
+            <h2 
+              className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-display font-bold leading-tight" 
+              data-testid="text-form-title"
+            >
+              {gameName} Registration
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Fill in all details carefully. Entry fee: ₹{entryFee} per team
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
+              Entry fee: <span className="font-semibold text-primary">₹{entryFee}</span> per team
             </p>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
+            className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 hover:bg-destructive/10 hover:text-destructive transition-all duration-200 hover:scale-110"
             data-testid="button-close-form"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-4 sm:p-5 md:p-6 lg:p-8 space-y-6 sm:space-y-7 md:space-y-8">
             {/* Team Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-display font-semibold">Team Information</h3>
+            <div 
+              className="space-y-4 sm:space-y-5"
+              data-aos="fade-up"
+              data-aos-delay="100"
+            >
+              <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
+                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
+                Team Information
+              </h3>
               
               <FormField
                 control={form.control}
                 name="teamName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Team Name</FormLabel>
+                    <FormLabel className="text-sm sm:text-base">Team Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your team name" {...field} data-testid="input-team-name" />
+                      <Input 
+                        placeholder="Enter your team name" 
+                        {...field} 
+                        className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                        data-testid="input-team-name" 
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm" />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
                 <FormField
                   control={form.control}
                   name="leaderName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Team Leader Name</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Team Leader Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Full name" {...field} data-testid="input-leader-name" />
+                        <Input 
+                          placeholder="Full name" 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-leader-name" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -159,11 +211,16 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                   name="leaderWhatsapp"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>WhatsApp Number</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">WhatsApp Number *</FormLabel>
                       <FormControl>
-                        <Input placeholder="10-digit number" {...field} data-testid="input-leader-whatsapp" />
+                        <Input 
+                          placeholder="10-digit number" 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-leader-whatsapp" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -174,30 +231,47 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                 name="leaderPlayerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Team Leader {playerIdLabel}</FormLabel>
+                    <FormLabel className="text-sm sm:text-base">Team Leader {playerIdLabel} *</FormLabel>
                     <FormControl>
-                      <Input placeholder={`Enter ${playerIdLabel}`} {...field} data-testid="input-leader-player-id" />
+                      <Input 
+                        placeholder={`Enter ${playerIdLabel}`} 
+                        {...field} 
+                        className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                        data-testid="input-leader-player-id" 
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm" />
                   </FormItem>
                 )}
               />
             </div>
 
             {/* Player 2 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-display font-semibold">Player 2</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div 
+              className="space-y-4 sm:space-y-5"
+              data-aos="fade-up"
+              data-aos-delay="150"
+            >
+              <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
+                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
+                Player 2
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
                 <FormField
                   control={form.control}
                   name="player2Name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Player 2 Name</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Player 2 Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Full name" {...field} data-testid="input-player2-name" />
+                        <Input 
+                          placeholder="Full name" 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-player2-name" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -207,11 +281,16 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                   name="player2PlayerId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Player 2 {playerIdLabel}</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Player 2 {playerIdLabel} *</FormLabel>
                       <FormControl>
-                        <Input placeholder={`Enter ${playerIdLabel}`} {...field} data-testid="input-player2-player-id" />
+                        <Input 
+                          placeholder={`Enter ${playerIdLabel}`} 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-player2-player-id" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -219,19 +298,31 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Player 3 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-display font-semibold">Player 3</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div 
+              className="space-y-4 sm:space-y-5"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
+              <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
+                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
+                Player 3
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
                 <FormField
                   control={form.control}
                   name="player3Name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Player 3 Name</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Player 3 Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Full name" {...field} data-testid="input-player3-name" />
+                        <Input 
+                          placeholder="Full name" 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-player3-name" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -241,11 +332,16 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                   name="player3PlayerId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Player 3 {playerIdLabel}</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Player 3 {playerIdLabel} *</FormLabel>
                       <FormControl>
-                        <Input placeholder={`Enter ${playerIdLabel}`} {...field} data-testid="input-player3-player-id" />
+                        <Input 
+                          placeholder={`Enter ${playerIdLabel}`} 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-player3-player-id" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -253,19 +349,31 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* Player 4 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-display font-semibold">Player 4</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div 
+              className="space-y-4 sm:space-y-5"
+              data-aos="fade-up"
+              data-aos-delay="250"
+            >
+              <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
+                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
+                Player 4
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
                 <FormField
                   control={form.control}
                   name="player4Name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Player 4 Name</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Player 4 Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Full name" {...field} data-testid="input-player4-name" />
+                        <Input 
+                          placeholder="Full name" 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-player4-name" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -275,11 +383,16 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                   name="player4PlayerId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Player 4 {playerIdLabel}</FormLabel>
+                      <FormLabel className="text-sm sm:text-base">Player 4 {playerIdLabel} *</FormLabel>
                       <FormControl>
-                        <Input placeholder={`Enter ${playerIdLabel}`} {...field} data-testid="input-player4-player-id" />
+                        <Input 
+                          placeholder={`Enter ${playerIdLabel}`} 
+                          {...field} 
+                          className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md" 
+                          data-testid="input-player4-player-id" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs sm:text-sm" />
                     </FormItem>
                   )}
                 />
@@ -287,60 +400,73 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
             </div>
 
             {/* YouTube Live Stream Vote */}
-            <div className="space-y-4">
+            <div 
+              className="space-y-4 sm:space-y-5"
+              data-aos="fade-up"
+              data-aos-delay="300"
+            >
               <FormField
                 control={form.control}
                 name="youtubeVote"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel className="text-base font-semibold">
+                  <FormItem className="space-y-3 p-4 sm:p-5 md:p-6 bg-secondary/20 rounded-lg border transition-all duration-200 hover:shadow-md">
+                    <FormLabel className="text-sm sm:text-base md:text-lg font-semibold">
                       Do you want to watch the match live on YouTube?
                     </FormLabel>
-                    <FormDescription>
+                    <FormDescription className="text-xs sm:text-sm">
                       Vote for live streaming. The option with more votes will be implemented.
                     </FormDescription>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
-                        className="flex gap-4"
+                        className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2"
                       >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="yes" id="vote-yes" data-testid="radio-youtube-yes" />
-                          <label htmlFor="vote-yes" className="cursor-pointer">Yes</label>
+                        <div className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 border rounded-lg hover:bg-secondary/30 transition-all duration-200 cursor-pointer flex-1">
+                          <RadioGroupItem value="yes" id="vote-yes" className="h-5 w-5 sm:h-6 sm:w-6" data-testid="radio-youtube-yes" />
+                          <label htmlFor="vote-yes" className="cursor-pointer text-sm sm:text-base font-medium flex-1">Yes, I'd love to watch!</label>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="no" id="vote-no" data-testid="radio-youtube-no" />
-                          <label htmlFor="vote-no" className="cursor-pointer">No</label>
+                        <div className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 border rounded-lg hover:bg-secondary/30 transition-all duration-200 cursor-pointer flex-1">
+                          <RadioGroupItem value="no" id="vote-no" className="h-5 w-5 sm:h-6 sm:w-6" data-testid="radio-youtube-no" />
+                          <label htmlFor="vote-no" className="cursor-pointer text-sm sm:text-base font-medium flex-1">No, thanks</label>
                         </div>
                       </RadioGroup>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm" />
                   </FormItem>
                 )}
               />
             </div>
 
             {/* Payment Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-display font-semibold">Payment Information</h3>
+            <div 
+              className="space-y-4 sm:space-y-5"
+              data-aos="fade-up"
+              data-aos-delay="350"
+            >
+              <h3 className="text-base sm:text-lg md:text-xl font-display font-semibold flex items-center gap-2">
+                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full"></span>
+                Payment Information
+              </h3>
               
-              <div className="bg-secondary/20 p-6 rounded-lg space-y-4">
+              <div className="bg-gradient-to-br from-secondary/30 to-secondary/10 p-4 sm:p-5 md:p-6 lg:p-8 rounded-lg border-2 border-dashed border-primary/20 space-y-4 sm:space-y-5">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-xs sm:text-sm md:text-base text-muted-foreground mb-3 sm:mb-4">
                     Scan the QR code below to make payment
                   </p>
-                  <div className="inline-block p-4 bg-white rounded-lg">
+                  <div className="inline-block p-3 sm:p-4 md:p-5 bg-white dark:bg-white rounded-lg shadow-lg transition-transform duration-300 hover:scale-105">
                     <img
                       src={paymentQr}
                       alt="Payment QR Code"
-                      className="w-64 h-64 object-contain mx-auto"
+                      className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 object-contain mx-auto"
                       data-testid="img-payment-qr"
                     />
                   </div>
-                  <p className="text-sm font-medium mt-3">
-                    Entry Fee: ₹{entryFee}
-                  </p>
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-primary/10 rounded-lg inline-block">
+                    <p className="text-sm sm:text-base md:text-lg font-bold text-primary">
+                      Entry Fee: ₹{entryFee}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -349,15 +475,16 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                 name="transactionId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Transaction ID / UTR Number</FormLabel>
+                    <FormLabel className="text-sm sm:text-base">Transaction ID / UTR Number *</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter transaction ID from payment app"
                         {...field}
+                        className="h-11 sm:h-12 md:h-13 text-sm sm:text-base transition-all duration-200 focus:scale-[1.01] focus:shadow-md"
                         data-testid="input-transaction-id"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm" />
                   </FormItem>
                 )}
               />
@@ -367,66 +494,94 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                 name="paymentScreenshot"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Payment Screenshot</FormLabel>
+                    <FormLabel className="text-sm sm:text-base">Payment Screenshot *</FormLabel>
                     <FormControl>
-                      <div className="space-y-4">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          data-testid="input-payment-screenshot"
-                        />
-                        {imagePreview && (
-                          <div className="relative w-full max-w-md">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="relative">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="h-11 sm:h-12 md:h-13 text-sm sm:text-base cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all duration-200"
+                            data-testid="input-payment-screenshot"
+                          />
+                          {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                              <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary" />
+                            </div>
+                          )}
+                        </div>
+                        {imagePreview && !isLoading && (
+                          <div 
+                            className="relative w-full max-w-md mx-auto"
+                            data-aos="zoom-in"
+                          >
+                            <div className="absolute -top-2 -right-2 z-10 bg-green-500 rounded-full p-1 sm:p-1.5 shadow-lg">
+                              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                            </div>
                             <img
                               src={imagePreview}
                               alt="Payment Screenshot Preview"
-                              className="rounded-lg border w-full"
+                              className="rounded-lg border-2 border-primary/20 w-full shadow-md transition-transform duration-300 hover:scale-105"
                             />
                           </div>
                         )}
+                        {isLoading && (
+                          <Skeleton className="h-48 sm:h-56 md:h-64 w-full max-w-md mx-auto rounded-lg" />
+                        )}
                       </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs sm:text-sm" />
                   </FormItem>
                 )}
               />
             </div>
 
             {/* Terms and Conditions */}
-            <FormField
-              control={form.control}
-              name="agreedToTerms"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value === 1}
-                      onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
-                      data-testid="checkbox-agree-terms"
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      I agree to the terms and conditions
-                    </FormLabel>
-                    <FormDescription>
-                      Registration is final. No refunds under any circumstances.
-                    </FormDescription>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
+            <div
+              data-aos="fade-up"
+              data-aos-delay="400"
+            >
+              <FormField
+                control={form.control}
+                name="agreedToTerms"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border-2 border-primary/20 p-4 sm:p-5 md:p-6 bg-secondary/10 transition-all duration-200 hover:shadow-md hover:border-primary/40">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value === 1}
+                        onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
+                        className="mt-1 h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200 hover:scale-110"
+                        data-testid="checkbox-agree-terms"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none flex-1">
+                      <FormLabel className="text-sm sm:text-base font-semibold cursor-pointer">
+                        I agree to the terms and conditions *
+                      </FormLabel>
+                      <FormDescription className="text-xs sm:text-sm pt-1 sm:pt-2">
+                        Registration is final. No refunds under any circumstances. By checking this box, you confirm all information provided is accurate.
+                      </FormDescription>
+                      <FormMessage className="text-xs sm:text-sm pt-1" />
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Submit Buttons */}
-            <div className="flex gap-4 justify-end">
+            <div 
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4"
+              data-aos="fade-up"
+              data-aos-delay="450"
+            >
               <Button
                 type="submit"
                 disabled={registerMutation.isPending}
+                className="w-full sm:w-auto sm:flex-1 md:flex-initial h-11 sm:h-12 md:h-13 text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 data-testid="button-submit-registration"
               >
-                {registerMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {registerMutation.isPending && <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />}
                 {registerMutation.isPending ? "Registering..." : "Complete Registration"}
               </Button>
               <Button
@@ -434,6 +589,7 @@ export function GameRegistrationForm({ onClose, gameType, gameName, entryFee }: 
                 variant="outline"
                 onClick={onClose}
                 disabled={registerMutation.isPending}
+                className="w-full sm:w-auto h-11 sm:h-12 md:h-13 text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 data-testid="button-cancel-registration"
               >
                 Cancel
