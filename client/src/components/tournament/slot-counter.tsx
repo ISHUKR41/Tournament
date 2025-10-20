@@ -2,6 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
+import { useEffect } from "react";
+import { tournamentChannel } from "@/lib/pusher";
+import { queryClient } from "@/lib/queryClient";
 
 interface SlotCounterProps {
   gameType: "pubg" | "freefire";
@@ -13,6 +16,21 @@ export function SlotCounter({ gameType, maxTeams }: SlotCounterProps) {
     queryKey: [`/api/teams/count/${gameType}`],
     refetchInterval: 5000,
   });
+
+  useEffect(() => {
+    const handleTeamRegistered = (data: { gameType: string }) => {
+      if (data.gameType === gameType) {
+        queryClient.invalidateQueries({ queryKey: [`/api/teams/count/${gameType}`] });
+        queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      }
+    };
+
+    tournamentChannel.bind('team-registered', handleTeamRegistered);
+
+    return () => {
+      tournamentChannel.unbind('team-registered', handleTeamRegistered);
+    };
+  }, [gameType]);
 
   const teamsCount = countData?.count || 0;
   const slotsRemaining = maxTeams - teamsCount;

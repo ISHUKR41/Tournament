@@ -7,14 +7,16 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// CORS for Vercel
+// CORS for Vercel - Allow requests from any origin
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin || '*';
+  res.header("Access-Control-Allow-Origin", origin);
+  res.header("Access-Control-Allow-Credentials", "true");
   res.header(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, PATCH, OPTIONS"
   );
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -31,20 +33,38 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize database (create tables and default admin) on first cold start
-let initialized = false;
-if (!initialized) {
-  initializeDatabase().then(() => {
-    initialized = true;
-    console.log('✅ Database initialized for Vercel deployment');
-  }).catch(err => {
-    console.error('❌ Database initialization failed:', err);
-  });
-}
+// Initialize database and routes on first request (serverless)
+let initPromise: Promise<void> | null = null;
 
-// Register all API routes
-registerRoutes(app).catch(err => {
-  console.error('Failed to register routes:', err);
+const ensureInit = async () => {
+  if (!initPromise) {
+    initPromise = (async () => {
+      try {
+        console.log('🔧 Initializing database for Vercel...');
+        await initializeDatabase();
+        console.log('✅ Database initialized');
+        
+        console.log('📋 Registering routes...');
+        await registerRoutes(app);
+        console.log('✅ Routes registered');
+      } catch (err) {
+        console.error('❌ Initialization failed:', err);
+        initPromise = null;
+        throw err;
+      }
+    })();
+  }
+  return initPromise;
+};
+
+// Middleware to ensure initialization before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await ensureInit();
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Global error handler
@@ -55,5 +75,5 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(status).json({ message });
 });
 
-// Export for Vercel
+// Export for Vercel serverless
 export default app;

@@ -83,6 +83,10 @@ export async function registerRoutes(app: Express): Promise<void> {
     try {
       const validatedData = insertTeamSchema.parse(req.body);
       const team = await storage.createTeam(validatedData);
+      
+      const { notifyTeamRegistration } = await import("./services/pusher");
+      await notifyTeamRegistration(team.gameType);
+      
       res.status(201).json(team);
     } catch (error: any) {
       if (error.name === "ZodError") {
@@ -161,6 +165,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ message: "Invalid status value" });
       }
       const team = await storage.updateTeamStatus(req.params.id, status);
+      
+      const { notifyPaymentUpdate } = await import("./services/pusher");
+      await notifyPaymentUpdate(team.id);
+      
       res.json(team);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
