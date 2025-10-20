@@ -21,11 +21,14 @@ async function isPostgresRunning(): Promise<boolean> {
 
 export async function ensureDatabase() {
   if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '') {
-    console.log("✅ DATABASE_URL is set, using existing database");
+    console.log("✅ DATABASE_URL is set, using cloud database (Neon PostgreSQL)");
+    console.log("📊 This ensures data persistence and real-time sync across all users");
     return;
   }
 
-  console.log("⚠️  DATABASE_URL not set. Setting up local PostgreSQL...");
+  console.log("⚠️  DATABASE_URL not set. Setting up local PostgreSQL for development...");
+  console.log("📝 NOTE: For production deployment, you MUST set DATABASE_URL to a cloud database");
+  console.log("📝 This local database is only for development and data will NOT sync across users");
 
   try {
     const needsInit = !fs.existsSync(path.join(POSTGRES_DIR, 'PG_VERSION'));
@@ -118,7 +121,7 @@ export async function ensureDatabase() {
     const localDatabaseUrl = `postgresql://runner@localhost:${PORT}/replit_db?host=${SOCKET_DIR}`;
     process.env.DATABASE_URL = localDatabaseUrl;
     
-    console.log("✅ DATABASE_URL set to local PostgreSQL");
+    console.log("✅ DATABASE_URL set to local PostgreSQL (development only)");
   } catch (error: any) {
     console.error("❌ Failed to setup local database:", error.message);
     throw new Error(`Database setup failed: ${error.message}`);

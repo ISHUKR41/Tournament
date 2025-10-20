@@ -8,6 +8,24 @@ import path from "path";
 import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<void> {
+  app.get("/api/health", async (_req, res) => {
+    try {
+      const teamCount = await storage.getTeamCount();
+      res.json({ 
+        status: "healthy",
+        database: "connected",
+        timestamp: new Date().toISOString(),
+        totalTeams: teamCount
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        status: "unhealthy",
+        database: "disconnected",
+        error: error.message 
+      });
+    }
+  });
+
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { username, password } = req.body;
