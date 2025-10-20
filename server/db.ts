@@ -6,21 +6,23 @@ let _client: postgres.Sql | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
 function getSupabaseConnectionString(): string {
-  const supabaseUrl =
-    process.env.SUPABASE_URL || "https://ielwxcdoejxahmdsfznj.supabase.co";
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDc4MDk4NCwiZXhwIjoyMDc2MzU2OTg0fQ.nbewHUVOQwIueavCvyi64GRxrcbnTB7EFVOaGy3WJbE";
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const dbPassword = process.env.SUPABASE_DB_PASSWORD || "ISHUkr21@";
 
-  // Extract the project reference from the URL
+  if (!supabaseUrl) {
+    throw new Error("Supabase URL not configured");
+  }
+
+  // Extract project ref
   const projectRef = supabaseUrl
     .replace("https://", "")
     .replace(".supabase.co", "");
 
-  // Create the PostgreSQL connection string for Supabase
+  // Use Session Pooler (IPv4 compatible, works on Vercel)
+  // Port 5432 for Session mode pooler
   return `postgresql://postgres.${projectRef}:${encodeURIComponent(
-    serviceRoleKey
-  )}@aws-0-ap-south-1.pooler.supabase.co:6543/postgres`;
+    dbPassword
+  )}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`;
 }
 
 function initializeDb() {
@@ -39,8 +41,9 @@ function initializeDb() {
     _client = postgres(dbUrl, {
       max: 1, // Single connection for serverless
       idle_timeout: 20,
-      connect_timeout: 10,
+      connect_timeout: 30,
       prepare: false, // Disable prepared statements for serverless
+      ssl: false, // Disable SSL for pooler
       types: {
         bigint: postgres.BigInt,
       },

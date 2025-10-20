@@ -2,6 +2,7 @@ import { type Team, type InsertTeam, type Admin, type InsertAdmin, TOURNAMENT_CO
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, count, or, like, inArray, sql } from "drizzle-orm";
+import { MockStorage } from "./mock-storage";
 
 export interface IStorage {
   getAllTeams(): Promise<Team[]>;
@@ -166,4 +167,18 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = (() => {
+  const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== "";
+  
+  if (!hasDatabase) {
+    console.log("📦 Using mock storage (in-memory)");
+    return new MockStorage();
+  }
+  
+  try {
+    return new DatabaseStorage();
+  } catch (error) {
+    console.error("⚠️  Failed to initialize database storage, falling back to mock storage", error);
+    return new MockStorage();
+  }
+})();

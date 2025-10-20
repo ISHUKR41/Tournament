@@ -27,11 +27,8 @@ async function isPostgresRunning(): Promise<boolean> {
 
 export async function ensureDatabase() {
   // Check if we have Supabase credentials
-  const supabaseUrl =
-    process.env.SUPABASE_URL || "https://ielwxcdoejxahmdsfznj.supabase.co";
-  const supabaseServiceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDc4MDk4NCwiZXhwIjoyMDc2MzU2OTg0fQ.nbewHUVOQwIueavCvyi64GRxrcbnTB7EFVOaGy3WJbE";
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (supabaseUrl && supabaseServiceKey) {
     console.log("✅ Using Supabase PostgreSQL database");
@@ -41,12 +38,14 @@ export async function ensureDatabase() {
 
     // Construct DATABASE_URL if not already set
     if (!process.env.DATABASE_URL || process.env.DATABASE_URL.trim() === "") {
+      // Use Session Pooler (IPv4 compatible)
+      const dbPassword = process.env.SUPABASE_DB_PASSWORD || "ISHUkr21@";
       const projectRef = supabaseUrl
         .replace("https://", "")
         .replace(".supabase.co", "");
       process.env.DATABASE_URL = `postgresql://postgres.${projectRef}:${encodeURIComponent(
-        supabaseServiceKey
-      )}@aws-0-ap-south-1.pooler.supabase.co:6543/postgres`;
+        dbPassword
+      )}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`;
       console.log("📊 DATABASE_URL constructed from Supabase credentials");
     }
     return;
