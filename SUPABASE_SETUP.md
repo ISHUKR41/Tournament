@@ -1,5 +1,25 @@
 # 🚀 Supabase Integration Guide - Complete Setup
 
+## ⚠️ **CRITICAL SECURITY NOTICE**
+
+**Your Supabase API keys were exposed in conversation and MUST be rotated immediately!**
+
+### **Rotate Your Keys NOW:**
+
+1. Go to: https://supabase.com/dashboard/project/ielwxcdoejxahmdsfznj/settings/api
+2. Scroll to **"Project API keys"** section
+3. Click **"Rotate"** on BOTH:
+   - **anon public** key
+   - **service_role secret** key
+4. Update the new keys in:
+   - Replit Secrets
+   - Vercel Environment Variables
+5. Redeploy your application
+
+**Why:** API keys shown in conversation history could be compromised. The **service_role** key especially has full database admin access!
+
+---
+
 ## ✅ Your Supabase Project Details
 
 **Project Reference**: `ielwxcdoejxahmdsfznj`  
@@ -19,13 +39,26 @@ SUPABASE_URL=https://ielwxcdoejxahmdsfznj.supabase.co
 
 ### 2. Anonymous/Public Key (Safe for Frontend)
 ```
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5ODQsImV4cCI6MjA3NjM1Njk4NH0.KAjZJ4Em7zBwWz8XxvyIeTayn6ILrasb7n2uUg0rt2o
+SUPABASE_ANON_KEY=[Get from Supabase Dashboard → Settings → API → anon public key]
 ```
 
-### 3. Service Role Key (Backend Only - Keep Secret!)
+**How to get:**
+1. Go to https://supabase.com/dashboard/project/ielwxcdoejxahmdsfznj/settings/api
+2. Copy the **"anon public"** key
+3. Paste it in Replit Secrets and Vercel Environment Variables
+
+### 3. Service Role Key (Backend Only - NEVER SHARE!)
 ```
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDc4MDk4NCwiZXhwIjoyMDc2MzU2OTg0fQ.nbewHUVOQwIueavCvyi64GRxrcbnTB7EFVOaGy3WJbE
+SUPABASE_SERVICE_ROLE_KEY=[Get from Supabase Dashboard → Settings → API → service_role secret]
 ```
+
+**⚠️ CRITICAL WARNING:** This key bypasses Row Level Security and has full database admin access!
+
+**How to get:**
+1. Go to https://supabase.com/dashboard/project/ielwxcdoejxahmdsfznj/settings/api
+2. Copy the **"service_role secret"** key
+3. Store it ONLY in Replit Secrets and Vercel Environment Variables
+4. **NEVER commit this to Git or share it publicly!**
 
 ### 4. Session Secret (For Admin Authentication)
 ```
@@ -126,8 +159,8 @@ Add these EXACT variables:
 ```env
 # Supabase Configuration
 SUPABASE_URL=https://ielwxcdoejxahmdsfznj.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5ODQsImV4cCI6MjA3NjM1Njk4NH0.KAjZJ4Em7zBwWz8XxvyIeTayn6ILrasb7n2uUg0rt2o
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDc4MDk4NCwiZXhwIjoyMDc2MzU2OTg0fQ.nbewHUVOQwIueavCvyi64GRxrcbnTB7EFVOaGy3WJbE
+SUPABASE_ANON_KEY=[Get from: Dashboard → Settings → API → anon public key]
+SUPABASE_SERVICE_ROLE_KEY=[Get from: Dashboard → Settings → API → service_role secret]
 
 # Database (PostgreSQL)
 DATABASE_URL=postgresql://postgres.ielwxcdoejxahmdsfznj:[YOUR-PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres

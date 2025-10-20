@@ -1,5 +1,17 @@
 # 🚀 Vercel Deployment Guide - Step by Step
 
+## ⚠️ **IMPORTANT: Rotate Your Supabase Keys First!**
+
+Before deployment, **rotate your Supabase API keys** because they may have been exposed:
+
+1. Go to: https://supabase.com/dashboard/project/ielwxcdoejxahmdsfznj/settings/api
+2. Click **"Rotate"** on both `anon public` and `service_role secret` keys
+3. Use the NEW keys in Steps 4-5 below
+
+**Why:** Security best practice - never use potentially exposed credentials in production!
+
+---
+
 ## ✅ Prerequisites Checklist
 
 Before deploying, make sure you have:
@@ -83,14 +95,23 @@ https://ielwxcdoejxahmdsfznj.supabase.co
 ```
 
 **2. SUPABASE_ANON_KEY**
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5ODQsImV4cCI6MjA3NjM1Njk4NH0.KAjZJ4Em7zBwWz8XxvyIeTayn6ILrasb7n2uUg0rt2o
-```
+
+**How to get this value:**
+1. Go to: https://supabase.com/dashboard/project/ielwxcdoejxahmdsfznj/settings/api
+2. Find **"Project API keys"** section
+3. Copy the **"anon public"** key
+4. Paste it in Vercel environment variables
 
 **3. SUPABASE_SERVICE_ROLE_KEY**
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDc4MDk4NCwiZXhwIjoyMDc2MzU2OTg0fQ.nbewHUVOQwIueavCvyi64GRxrcbnTB7EFVOaGy3WJbE
-```
+
+**⚠️ WARNING: This is a SECRET key with full database admin access!**
+
+**How to get this value:**
+1. Go to: https://supabase.com/dashboard/project/ielwxcdoejxahmdsfznj/settings/api
+2. Find **"Project API keys"** section
+3. Copy the **"service_role secret"** key (you may need to click "Reveal" first)
+4. Paste it in Vercel environment variables
+5. **NEVER share this key or commit it to Git!**
 
 **4. DATABASE_URL** (⚠️ REPLACE WITH YOUR PASSWORD!)
 ```
