@@ -22,13 +22,34 @@
       "destination": "/api/index.ts"
     },
     {
+      "source": "/assets/(.*)",
+      "destination": "/dist/public/assets/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/dist/public/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/dist/public/(.*)",
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, Cookie"
+        }
+      ]
+    },
+    {
+      "source": "/dist/public/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -42,11 +63,21 @@
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
         }
       ]
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 60
+    }
   }
 }

@@ -1,51 +1,83 @@
-import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
-import { Pool as PgPool } from "pg";
-import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
-import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
-import ws from "ws";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+let _client: postgres.Sql | null = null;
+let _db: ReturnType<typeof drizzle> | null = null;
 
-let _pool: NeonPool | PgPool | null = null;
-let _db: ReturnType<typeof drizzleNeon> | ReturnType<typeof drizzlePg> | null =
-  null;
+function getSupabaseConnectionString(): string {
+  const supabaseUrl =
+    process.env.SUPABASE_URL || "https://ielwxcdoejxahmdsfznj.supabase.co";
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllbHd4Y2RvZWp4YWhtZHNmem5qIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDc4MDk4NCwiZXhwIjoyMDc2MzU2OTg0fQ.nbewHUVOQwIueavCvyi64GRxrcbnTB7EFVOaGy3WJbE";
 
-function initializeDb() {
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.trim() === "") {
-    throw new Error(
-      "DATABASE_URL must be set. Did you forget to provision a database?"
-    );
-  }
+  // Extract the project reference from the URL
+  const projectRef = supabaseUrl
+    .replace("https://", "")
+    .replace(".supabase.co", "");
 
-  if (!_pool) {
-    const dbUrl = process.env.DATABASE_URL;
-
-    if (dbUrl.includes("neon") || dbUrl.includes("wss://")) {
-      console.log("📊 Using Neon serverless database");
-      _pool = new NeonPool({ connectionString: dbUrl, max: 1 }); // max: 1 for Vercel serverless
-      _db = drizzleNeon({ client: _pool as NeonPool, schema });
-    } else {
-      console.log("📊 Using PostgreSQL database");
-      _pool = new PgPool({ connectionString: dbUrl, max: 1 }); // max: 1 for Vercel serverless
-      _db = drizzlePg({ client: _pool as PgPool, schema });
-    }
-  }
+  // Create the PostgreSQL connection string for Supabase
+  return `postgresql://postgres.${projectRef}:${encodeURIComponent(
+    serviceRoleKey
+  )}@aws-0-ap-south-1.pooler.supabase.co:6543/postgres`;
 }
 
-export const pool = new Proxy({} as NeonPool | PgPool, {
+function initializeDb() {
+  if (!_client) {
+    let dbUrl = process.env.DATABASE_URL;
+
+    // If no DATABASE_URL, construct it from Supabase credentials
+    if (!dbUrl || dbUrl.trim() === "") {
+      console.log("📊 Constructing database URL from Supabase credentials...");
+      dbUrl = getSupabaseConnectionString();
+    }
+
+    console.log("📊 Connecting to Supabase PostgreSQL database...");
+
+    // Connection options optimized for Vercel serverless
+    _client = postgres(dbUrl, {
+      max: 1, // Single connection for serverless
+      idle_timeout: 20,
+      connect_timeout: 10,
+      prepare: false, // Disable prepared statements for serverless
+      types: {
+        bigint: postgres.BigInt,
+      },
+    });
+
+    _db = drizzle(_client, { schema });
+    console.log("✅ Database connection established");
+  }
+
+  return _db!;
+}
+
+export const db = new Proxy({} as ReturnType<typeof drizzle>, {
   get(_target, prop) {
-    if (!_pool) initializeDb();
-    return (_pool as any)[prop];
+    if (!_db) _db = initializeDb();
+    return (_db as any)[prop];
   },
 });
 
-export const db = new Proxy(
-  {} as ReturnType<typeof drizzleNeon> & ReturnType<typeof drizzlePg>,
-  {
-    get(_target, prop) {
-      if (!_db) initializeDb();
-      return (_db as any)[prop];
-    },
+// Health check function
+export async function testConnection() {
+  try {
+    const result = await db.select().from(schema.teams).limit(1);
+    console.log("✅ Database connection test successful");
+    return true;
+  } catch (error) {
+    console.error("❌ Database connection test failed:", error);
+    return false;
   }
-);
+}
+
+// Export client for cleanup if needed
+export function closeConnection() {
+  if (_client) {
+    _client.end();
+    _client = null;
+    _db = null;
+    console.log("🔌 Database connection closed");
+  }
+}

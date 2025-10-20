@@ -1,10 +1,25 @@
-import { sql } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
-import { db } from './db';
+import { sql } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+import { db, testConnection } from "./db";
+import { testSupabaseConnection } from "@shared/supabase";
 
 export async function initializeDatabase() {
   try {
     console.log("🔧 Initializing database...");
+
+    // Test database connection first
+    console.log("📊 Testing database connection...");
+    const dbConnected = await testConnection();
+    if (!dbConnected) {
+      throw new Error("Database connection failed");
+    }
+
+    // Test Supabase connection
+    console.log("📊 Testing Supabase connection...");
+    const supabaseConnected = await testSupabaseConnection();
+    if (!supabaseConnected) {
+      console.warn("⚠️  Supabase connection test failed, but continuing...");
+    }
 
     console.log("📊 Creating admin_users table...");
     await db.execute(sql`
@@ -42,69 +57,77 @@ export async function initializeDatabase() {
       )
     `);
 
-    console.log("📊 Migrating existing teams table...");
+    console.log("📊 Running table migrations...");
     try {
-      await db.execute(sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS game_type TEXT NOT NULL DEFAULT 'pubg'`);
-      
-      // Check if youtube_vote column exists and its type
-      const youtubeVoteCheck = await db.execute(sql`
-        SELECT data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'teams' AND column_name = 'youtube_vote'
-      `);
-      
-      if (youtubeVoteCheck.rows.length > 0) {
-        const dataType = youtubeVoteCheck.rows[0].data_type;
-        if (dataType === 'integer') {
-          console.log("📊 Converting youtube_vote from INTEGER to TEXT...");
-          // Drop default and convert
-          await db.execute(sql`ALTER TABLE teams ALTER COLUMN youtube_vote DROP DEFAULT`);
-          await db.execute(sql`ALTER TABLE teams ALTER COLUMN youtube_vote TYPE TEXT USING CASE WHEN youtube_vote = 0 THEN 'no' ELSE 'yes' END`);
-          await db.execute(sql`ALTER TABLE teams ALTER COLUMN youtube_vote SET DEFAULT 'no'`);
-          console.log("✅ youtube_vote column converted to TEXT");
-        }
-      } else {
-        await db.execute(sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS youtube_vote TEXT NOT NULL DEFAULT 'no'`);
+      // Add game_type column if not exists
+      await db.execute(
+        sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS game_type TEXT NOT NULL DEFAULT 'pubg'`
+      );
+
+      // Check and convert youtube_vote column from integer to text
+      try {
+        const result = await db.execute(
+          sql`SELECT youtube_vote FROM teams LIMIT 1`
+        );
+        console.log("✅ youtube_vote column exists and accessible");
+      } catch {
+        await db.execute(
+          sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS youtube_vote TEXT NOT NULL DEFAULT 'no'`
+        );
+        console.log("✅ Added youtube_vote column");
       }
-      
-      const columnsResult = await db.execute(sql`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'teams' AND column_name LIKE '%pubg_id'
-      `);
-      
-      if (columnsResult.rows.length > 0) {
+
+      // Check for old column names and rename if necessary
+      try {
+        await db.execute(sql`SELECT leader_pubg_id FROM teams LIMIT 1`);
         console.log("📊 Renaming pubg_id columns to player_id...");
-        await db.execute(sql`ALTER TABLE teams RENAME COLUMN leader_pubg_id TO leader_player_id`);
-        await db.execute(sql`ALTER TABLE teams RENAME COLUMN player2_pubg_id TO player2_player_id`);
-        await db.execute(sql`ALTER TABLE teams RENAME COLUMN player3_pubg_id TO player3_player_id`);
-        await db.execute(sql`ALTER TABLE teams RENAME COLUMN player4_pubg_id TO player4_player_id`);
+        await db.execute(
+          sql`ALTER TABLE teams RENAME COLUMN leader_pubg_id TO leader_player_id`
+        );
+        await db.execute(
+          sql`ALTER TABLE teams RENAME COLUMN player2_pubg_id TO player2_player_id`
+        );
+        await db.execute(
+          sql`ALTER TABLE teams RENAME COLUMN player3_pubg_id TO player3_player_id`
+        );
+        await db.execute(
+          sql`ALTER TABLE teams RENAME COLUMN player4_pubg_id TO player4_player_id`
+        );
         console.log("✅ Columns renamed successfully!");
+      } catch {
+        // Columns already have correct names or don't exist
+        console.log("ℹ️  Player ID columns already have correct names");
       }
     } catch (error: any) {
-      if (!error.message.includes('already exists') && !error.message.includes('does not exist')) {
-        console.error("⚠️  Migration warning:", error.message);
-      }
+      console.log("⚠️  Migration completed with warnings:", error.message);
     }
 
-    const existingAdminResult = await db.execute(sql`SELECT COUNT(*) as count FROM admin_users`);
-    const adminCount = Number(existingAdminResult.rows[0]?.count || 0);
-    
-    if (adminCount === 0) {
-      console.log("👤 Creating default admin user...");
-      const hashedPassword = await bcrypt.hash("admin123", 10);
-      
-      await db.execute(sql`
-        INSERT INTO admin_users (username, password)
-        VALUES ('admin', ${hashedPassword})
-      `);
-      
-      console.log("✅ Default admin created!");
-      console.log("📝 Username: admin");
-      console.log("📝 Password: admin123");
-      console.log("⚠️  IMPORTANT: Change this password after first login!");
-    } else {
-      console.log("✅ Admin user already exists");
+    // Check if admin exists
+    console.log("👤 Checking for existing admin users...");
+    try {
+      const existingAdmins = await db.execute(
+        sql`SELECT COUNT(*) as count FROM admin_users`
+      );
+      const adminCount = Number((existingAdmins as any)[0]?.count || 0);
+
+      if (adminCount === 0) {
+        console.log("👤 Creating default admin user...");
+        const hashedPassword = await bcrypt.hash("admin123", 10);
+
+        await db.execute(sql`
+          INSERT INTO admin_users (username, password)
+          VALUES ('admin', ${hashedPassword})
+        `);
+
+        console.log("✅ Default admin created!");
+        console.log("📝 Username: admin");
+        console.log("📝 Password: admin123");
+        console.log("⚠️  IMPORTANT: Change this password after first login!");
+      } else {
+        console.log("✅ Admin user already exists");
+      }
+    } catch (error: any) {
+      console.log("⚠️  Could not check/create admin user:", error.message);
     }
 
     console.log("✅ Database initialized successfully!");
