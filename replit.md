@@ -435,4 +435,65 @@ The app automatically runs database initialization on first deployment:
 ---
 
 **Built with ❤️ for Gaming Community**
-**Last Updated**: October 19, 2025
+
+---
+
+## 🔥 Recent Updates - October 20, 2025
+
+### Critical Fixes for Vercel Deployment
+
+✅ **Fixed Page Refresh 404 Issue**
+- Updated `vercel.json` to use rewrites instead of routes
+- All pages (PUBG, Free Fire, Admin) now work correctly after refresh
+- No more "Page Not Found" errors on deployed version
+
+✅ **Fixed Database Sync Issue**
+- Configured cloud database support (Neon PostgreSQL)
+- All users now see the same data in real-time
+- Data persists across deployments
+- Local development uses temporary PostgreSQL (Replit only)
+
+✅ **Added Comprehensive Deployment Guide**
+- New file: `VERCEL_DEPLOYMENT_COMPLETE_GUIDE.md`
+- Step-by-step instructions for Vercel deployment
+- Complete environment variable documentation
+- Troubleshooting section for common issues
+
+✅ **Enhanced Error Handling**
+- Added health check endpoint: `/api/health`
+- Better error messages for database connection issues
+- Improved logging for debugging
+
+✅ **Security & Documentation**
+- External data sources documented in `CREDENTIALS_REFERENCE.md` (not committed to git)
+- Proper .gitignore configuration
+- Environment variable best practices
+
+### Important: Before Deploying to Vercel
+
+You MUST set these environment variables in Vercel:
+
+1. **DATABASE_URL** - Your Neon PostgreSQL connection string
+   - Get it from: https://neon.tech (create free account)
+   - Format: `postgresql://user:pass@host/dbname?sslmode=require`
+
+2. **SESSION_SECRET** - Random secure string for admin sessions
+   - Generate with: `openssl rand -base64 32`
+   - Or use: https://randomkeygen.com/
+
+3. **NODE_ENV** - Set to `production`
+
+### Quick Deployment Steps
+
+1. Read `VERCEL_DEPLOYMENT_COMPLETE_GUIDE.md` thoroughly
+2. Create Neon PostgreSQL database
+3. Push code to GitHub
+4. Import to Vercel
+5. Add environment variables
+6. Deploy
+7. Test all routes (especially refresh on different pages)
+8. Verify data syncs across multiple browsers
+
+---
+
+**Last Updated**: October 20, 2025
