@@ -33,7 +33,7 @@ export async function initializeDatabase() {
         transaction_id TEXT NOT NULL,
         payment_screenshot TEXT NOT NULL,
         game_type TEXT NOT NULL DEFAULT 'pubg',
-        youtube_vote INTEGER NOT NULL DEFAULT 0,
+        youtube_vote TEXT NOT NULL DEFAULT 'no',
         agreed_to_terms INTEGER NOT NULL DEFAULT 1,
         status TEXT NOT NULL DEFAULT 'pending',
         admin_notes TEXT,
@@ -45,7 +45,27 @@ export async function initializeDatabase() {
     console.log("📊 Migrating existing teams table...");
     try {
       await db.execute(sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS game_type TEXT NOT NULL DEFAULT 'pubg'`);
-      await db.execute(sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS youtube_vote INTEGER NOT NULL DEFAULT 0`);
+      
+      // Check if youtube_vote column exists and its type
+      const youtubeVoteCheck = await db.execute(sql`
+        SELECT data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'teams' AND column_name = 'youtube_vote'
+      `);
+      
+      if (youtubeVoteCheck.rows.length > 0) {
+        const dataType = youtubeVoteCheck.rows[0].data_type;
+        if (dataType === 'integer') {
+          console.log("📊 Converting youtube_vote from INTEGER to TEXT...");
+          // Drop default and convert
+          await db.execute(sql`ALTER TABLE teams ALTER COLUMN youtube_vote DROP DEFAULT`);
+          await db.execute(sql`ALTER TABLE teams ALTER COLUMN youtube_vote TYPE TEXT USING CASE WHEN youtube_vote = 0 THEN 'no' ELSE 'yes' END`);
+          await db.execute(sql`ALTER TABLE teams ALTER COLUMN youtube_vote SET DEFAULT 'no'`);
+          console.log("✅ youtube_vote column converted to TEXT");
+        }
+      } else {
+        await db.execute(sql`ALTER TABLE teams ADD COLUMN IF NOT EXISTS youtube_vote TEXT NOT NULL DEFAULT 'no'`);
+      }
       
       const columnsResult = await db.execute(sql`
         SELECT column_name 

@@ -84,8 +84,15 @@ export async function registerRoutes(app: Express): Promise<void> {
       const validatedData = insertTeamSchema.parse(req.body);
       const team = await storage.createTeam(validatedData);
       
-      const { notifyTeamRegistration } = await import("./services/pusher");
-      await notifyTeamRegistration(team.gameType);
+      // Fire-and-forget Pusher notification (don't block on failure)
+      (async () => {
+        try {
+          const { notifyTeamRegistration } = await import("./services/pusher");
+          await notifyTeamRegistration(team.gameType);
+        } catch (err) {
+          console.warn("Failed to send Pusher notification:", err);
+        }
+      })();
       
       res.status(201).json(team);
     } catch (error: any) {
@@ -166,8 +173,15 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
       const team = await storage.updateTeamStatus(req.params.id, status);
       
-      const { notifyPaymentUpdate } = await import("./services/pusher");
-      await notifyPaymentUpdate(team.id);
+      // Fire-and-forget Pusher notification (don't block on failure)
+      (async () => {
+        try {
+          const { notifyPaymentUpdate } = await import("./services/pusher");
+          await notifyPaymentUpdate(team.id);
+        } catch (err) {
+          console.warn("Failed to send Pusher notification:", err);
+        }
+      })();
       
       res.json(team);
     } catch (error: any) {
