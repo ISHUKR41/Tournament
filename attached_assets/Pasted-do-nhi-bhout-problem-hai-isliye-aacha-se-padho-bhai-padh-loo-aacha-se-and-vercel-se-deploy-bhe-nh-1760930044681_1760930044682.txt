@@ -1,0 +1,44 @@
+do nhi bhout problem hai isliye aacha se padho bhai
+
+padh loo aacha se and vercel se deploy bhe nhi ho paa raha hai to ukso bhe sahi karo vercel se deploy karna par koi ouptu nhi aa raha hai to usko bhe sahi karna hai kaise bhe
+
+sab cheez aacha se debug bhe kar doo
+
+
+and mai tumko bhout sare cheez ka abhi access de raha hu jisko tumko database ke tara use kar sakte hoo 
+
+
+https://1drv.ms/x/c/fc1d493acfa886f8/EUnymyT7MxJKkmmltZd-pioBjw2oBfKvQWleSAhzQqyNOw?e=SuenXi
+
+password hai 
+
+ISHUkr21@
+
+
+https://docs.google.com/spreadsheets/d/1B31pDhZOULFIIX9I9JWSN630YMQbu9XQczZTlaHlZeA/edit?usp=sharing
+
+isme koi password nhi hia 
+
+and iss folder mai bhe koi password nhi hia 
+
+https://drive.google.com/drive/folders/1W3vTEuU2g_RfZulxAAWfI0nOAQzb_OsT?usp=sharing
+
+
+
+https://1drv.ms/f/c/fc1d493acfa886f8/EviGqM86SR0ggPy_WgAAAAABQTdhzywIPZc8r2A-zTP4Kg?e=kZePXF
+
+and iss folder ka password hai 
+ISHUkr21@
+
+
+sabka passwrod and secret key tum aacha se save kar loo mujhe baar baar ye sab cheez batna nhi pade 
+
+
+and baar baar registarion failed ho jaaa raha hai to isko bhe sahi kar yar pls  haar baar koi na error aa hee jaa raha hai 
+
+iss baar sab cheez fix ho jana chiaye kuch bhe misss nhi hona chiaye 
+
+maine database ke liye hee ye sab diya hai and ye vercel par acha se deploy nhi ho raha hai kuch na kuch error show kar de raha hai humesa haar baar to usko bhe shai karna hai tumko mujhe fullly saaas application chiaye and vercel par deploy karne par koi bhe error nhi aanc chiaye 
+
+
+and sab cheez iss baar aacha se padh lena pls and sabko ek hee data show hona chiaye jab mai isko vercel par deploy kar dunga to mai isko bhout logo ke pass share karunga to sabko webiste aacha se show hona chiaye and sabko wesite mi jo bhe changes hoga real time mai dikhna chiaye ye nhi hona chiaye ki kisi mai ek team regidster dfikha raha hai kisi mai 5 team sab cheez aacha se sync rahna chaiye and admin panel mai bhe abhi bhout problems hai to usko bhe shai karna hai kaise bhe abhi sara kaam complete ho jana chaiye 
