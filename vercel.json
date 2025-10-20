@@ -1,21 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
-    },
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "maxDuration": 60
-      }
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/public",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -23,11 +9,11 @@
     },
     {
       "source": "/assets/(.*)",
-      "destination": "/dist/public/assets/$1"
+      "destination": "/assets/$1"
     },
     {
       "source": "/(.*)",
-      "destination": "/dist/public/index.html"
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -49,7 +35,7 @@
       ]
     },
     {
-      "source": "/dist/public/assets/(.*)",
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -58,7 +44,7 @@
       ]
     },
     {
-      "source": "/dist/public/index.html",
+      "source": "/index.html",
       "headers": [
         {
           "key": "Cache-Control",
